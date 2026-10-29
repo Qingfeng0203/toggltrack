@@ -41,14 +41,14 @@
                 <Image Source="/TogglDesktop;component/Resources/tutorial-arrow-curved.png"
                        Height="22" VerticalAlignment="Bottom" Margin="15 0 0 15"/>
                 <TextBlock Margin="5 10 0 0"
-                           ><Bold>{DynamicResource s_describe}</Bold> {DynamicResource s_activity_2}</TextBlock>
+                           ><Bold><Run Text="{DynamicResource s_describe}"/></Bold> <Run Text="{DynamicResource s_activity_2}"/></TextBlock>
             </StackPanel>
             <StackPanel Grid.Row="1" Margin="10 20 10 10"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top">
                 <TextBlock Margin="0 25 5 5"
-                           ><Bold>{DynamicResource s_start}</Bold> {DynamicResource s_tracking}<LineBreak/>{DynamicResource s_with_one_click}</TextBlock>
+                           ><Bold><Run Text="{DynamicResource s_start}"/></Bold> <Run Text="{DynamicResource s_tracking}"/><LineBreak/><Run Text="{DynamicResource s_with_one_click}"/></TextBlock>
                 <Image Source="/TogglDesktop;component/Resources/tutorial-arrow-curved.png"
                        Height="20" VerticalAlignment="Bottom" Margin="-12 0 0 40">
                     <Image.LayoutTransform>
@@ -62,7 +62,7 @@
 
             <StackPanel Grid.Row="2" Margin="10">
                 <TextBlock Margin="0 0 0 4"
-                           >{DynamicResource s_your} <Bold>{DynamicResource s_activity_2}</Bold> {DynamicResource s_will_appear_here}</TextBlock>
+                           ><Run Text="{DynamicResource s_your}"/> <Bold><Run Text="{DynamicResource s_activity_2}"/></Bold> <Run Text="{DynamicResource s_will_appear_here}"/></TextBlock>
                 <Image Source="/TogglDesktop;component/Resources/tutorial-line.png"
                            HorizontalAlignment="Center" Width="230" />
                 <Button Content="{DynamicResource s_ok_let_s_go}" Margin="0 20 0 0" Click="nextButtonClick" />

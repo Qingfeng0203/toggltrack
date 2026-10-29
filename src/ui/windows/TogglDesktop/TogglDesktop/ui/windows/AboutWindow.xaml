@@ -78,7 +78,7 @@
                 <Hyperlink NavigateUri="https://github.com/toggl-open-source/toggldesktop"
                            Style="{StaticResource Toggl.NormalHyperlink}"
                            Click="onGithubLinkClick"
-                           >{DynamicResource s_find_us_on_github}</Hyperlink>
+                           ><Run Text="{DynamicResource s_find_us_on_github}"/></Hyperlink>
             </Label>
         </StackPanel>
 

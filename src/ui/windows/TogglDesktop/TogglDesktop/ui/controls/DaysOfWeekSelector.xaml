@@ -29,19 +29,19 @@
 
                     <StackPanel Margin="16 16 24 16">
                         <CheckBox Name="remindDay1CheckBox" x:FieldModifier="private"
-                        >{DynamicResource s_monday}</CheckBox>
+                         Content="{DynamicResource s_monday}"/>
                         <CheckBox Name="remindDay2CheckBox" x:FieldModifier="private"
-                                  Margin="0 12 0 0">{DynamicResource s_tuesday}</CheckBox>
+                                  Margin="0 12 0 0" Content="{DynamicResource s_tuesday}"/>
                         <CheckBox Name="remindDay3CheckBox" x:FieldModifier="private"
-                                  Margin="0 12 0 0">{DynamicResource s_wednesday}</CheckBox>
+                                  Margin="0 12 0 0" Content="{DynamicResource s_wednesday}"/>
                         <CheckBox Name="remindDay4CheckBox" x:FieldModifier="private"
-                                  Margin="0 12 0 0">{DynamicResource s_thursday}</CheckBox>
+                                  Margin="0 12 0 0" Content="{DynamicResource s_thursday}"/>
                         <CheckBox Name="remindDay5CheckBox" x:FieldModifier="private"
-                                  Margin="0 12 0 0">{DynamicResource s_friday}</CheckBox>
+                                  Margin="0 12 0 0" Content="{DynamicResource s_friday}"/>
                         <CheckBox Name="remindDay6CheckBox" x:FieldModifier="private"
-                                  Margin="0 12 0 0">{DynamicResource s_saturday}</CheckBox>
+                                  Margin="0 12 0 0" Content="{DynamicResource s_saturday}"/>
                         <CheckBox Name="remindDay7CheckBox" x:FieldModifier="private"
-                                  Margin="0 12 0 0">{DynamicResource s_sunday}</CheckBox>
+                                  Margin="0 12 0 0" Content="{DynamicResource s_sunday}"/>
                     </StackPanel>
                 </Border>
             </Grid>

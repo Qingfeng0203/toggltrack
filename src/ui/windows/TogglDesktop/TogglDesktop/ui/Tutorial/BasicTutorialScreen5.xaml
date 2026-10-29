@@ -25,15 +25,15 @@
                 <StackPanel Margin="30"
                             HorizontalAlignment="Center">
                     <TextBlock TextAlignment="Center">
-                        {DynamicResource s_when_you_are_done_editing}<LineBreak />
-                        {DynamicResource s_close_the_edit_window_with_esc}<LineBreak />
-                        {DynamicResource s_or_by_clicking}
+                        <Run Text="{DynamicResource s_when_you_are_done_editing}"/><LineBreak />
+                        <Run Text="{DynamicResource s_close_the_edit_window_with_esc}"/><LineBreak />
+                        <Run Text="{DynamicResource s_or_by_clicking}"/>
                         <Border Background="#33ffffff" Margin="0 -7 0 -7" CornerRadius="2">
                             <Image Source="/TogglDesktop;component/Resources/ic_close_white600_36dp.png"
                                    Height="22" VerticalAlignment="Top" />
                         </Border>
                         <LineBreak /><LineBreak />
-                        {DynamicResource s_your_changes_will_always_be_saved}
+                        <Run Text="{DynamicResource s_your_changes_will_always_be_saved}"/>
                     </TextBlock>
 
                 </StackPanel>

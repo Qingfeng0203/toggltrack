@@ -30,14 +30,14 @@
                                 <RotateTransform Angle="45"></RotateTransform>
                             </Image.LayoutTransform>
                         </Image>
-                        <Bold>{DynamicResource s_edit}</Bold> {DynamicResource s_previous} <LineBreak/>
-                        {DynamicResource s_time_entries_by}<LineBreak/>
-                        {DynamicResource s_clicking_on_them}<LineBreak/>
-                        {DynamicResource s_in_the_list}
+                        <Bold><Run Text="{DynamicResource s_edit}"/></Bold> <Run Text="{DynamicResource s_previous}"/> <LineBreak/>
+                        <Run Text="{DynamicResource s_time_entries_by}"/><LineBreak/>
+                        <Run Text="{DynamicResource s_clicking_on_them}"/><LineBreak/>
+                        <Run Text="{DynamicResource s_in_the_list}"/>
                     </TextBlock>
 
                     <TextBlock Margin="10" HorizontalAlignment="Right">
-                        {DynamicResource s_or} <Bold>{DynamicResource s_continue_2}</Bold>
+                        <Run Text="{DynamicResource s_or}"/> <Bold><Run Text="{DynamicResource s_continue_2}"/></Bold>
                         <Image Source="/TogglDesktop;component/Resources/tutorial-arrow-curved.png"
                                Height="22" VerticalAlignment="Top" Margin="-15 -5 -10 5">
                             <Image.LayoutTransform>
@@ -48,8 +48,8 @@
                             </Image.LayoutTransform>
                         </Image>
                         <LineBreak/>
-                        {DynamicResource s_any_entry_by}<LineBreak/>
-                        {DynamicResource s_clicking_here}
+                        <Run Text="{DynamicResource s_any_entry_by}"/><LineBreak/>
+                        <Run Text="{DynamicResource s_clicking_here}"/>
                     </TextBlock>
 
                 </Grid>

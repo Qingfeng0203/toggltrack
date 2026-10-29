@@ -38,7 +38,7 @@
                        TextAlignment="Center">
                 <Hyperlink Style="{StaticResource Toggl.AccentHyperlink}"
                            NavigateUri="https://toggl.com/"
-                           RequestNavigate="CreateWorkspaceOnClick">{DynamicResource s_create_a_workspace}</Hyperlink>
+                           RequestNavigate="CreateWorkspaceOnClick"><Run Text="{DynamicResource s_create_a_workspace}"/></Hyperlink>
             </TextBlock>
             <TextBlock Style="{StaticResource Toggl.BodyGrayText}"
                        HorizontalAlignment="Center"
@@ -49,7 +49,7 @@
                        HorizontalAlignment="Center"
                        TextAlignment="Center">
                 <Hyperlink Style="{StaticResource Toggl.AccentHyperlink}"
-                           Click="ReLoginOnClick">{DynamicResource s_log_in_with_a_different_account}</Hyperlink>
+                           Click="ReLoginOnClick"><Run Text="{DynamicResource s_log_in_with_a_different_account}"/></Hyperlink>
             </TextBlock>
             <TextBlock Style="{StaticResource Toggl.CaptionText}"
                        Margin="32 52 32 0"
@@ -60,7 +60,7 @@
                        HorizontalAlignment="Center"
                        TextAlignment="Center">
                 <Hyperlink Style="{StaticResource Toggl.NormalHyperlink}"
-                           Click="RefreshNowOnClick">{DynamicResource s_refresh_now}</Hyperlink>
+                           Click="RefreshNowOnClick"><Run Text="{DynamicResource s_refresh_now}"/></Hyperlink>
             </TextBlock>
         </StackPanel>
         <StackPanel Name="tosChangesPanel" Margin="0 16 0 0">
@@ -77,11 +77,11 @@
                 <LineBreak />
                 <Hyperlink Style="{StaticResource Toggl.AccentHyperlink}"
                            NavigateUri="https://toggl.com/legal/terms"
-                           RequestNavigate="openTos">{DynamicResource s_terms_of_service}</Hyperlink>
+                           RequestNavigate="openTos"><Run Text="{DynamicResource s_terms_of_service}"/></Hyperlink>
                 <LineBreak />
                 <Hyperlink Style="{StaticResource Toggl.AccentHyperlink}"
                            NavigateUri="https://toggl.com/legal/privacy"
-                           RequestNavigate="openPrivacy">{DynamicResource s_privacy_policy}</Hyperlink>
+                           RequestNavigate="openPrivacy"><Run Text="{DynamicResource s_privacy_policy}"/></Hyperlink>
             </TextBlock>
             <Button Style="{StaticResource Toggl.PrimaryButton}"
                     Margin="0 24 0 0"

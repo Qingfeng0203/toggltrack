@@ -35,9 +35,7 @@
                 <mah:ToggleSwitch Margin="10 14 0 0"
                       OnLabel=""
                       OffLabel=""
-                      IsChecked="{Binding RecordActivity}">
-                    {DynamicResource s_record_activity}
-                </mah:ToggleSwitch>
+                      IsChecked="{Binding RecordActivity}" Content="{DynamicResource s_record_activity}"/>
                 <Grid VerticalAlignment="Bottom"
                       HorizontalAlignment="Left"
                       Margin="5 0 0 2">
@@ -49,24 +47,16 @@
                         <Border BorderThickness="1" Background="{DynamicResource Toggl.CardBackground}"
                                 BorderBrush="{DynamicResource Toggl.Background}">
                             <StackPanel MaxWidth="250" Margin="10 10 10 10">
-                                <TextBlock Style="{StaticResource Toggl.CaptionSemiBoldText}">
-                                    {DynamicResource s_having_trouble_recalling_what_you_were_working_o}
-                                </TextBlock>
+                                <TextBlock Style="{StaticResource Toggl.CaptionSemiBoldText}" Text="{DynamicResource s_having_trouble_recalling_what_you_were_working_o}"/>
                                 <TextBlock Style="{StaticResource Toggl.CaptionBlackText}"
-                                           Margin="0 12 0 0">
-                                    {DynamicResource s_record_your_computer_activity_and_revisit_it_lat}
-                                </TextBlock>
+                                           Margin="0 12 0 0" Text="{DynamicResource s_record_your_computer_activity_and_revisit_it_lat}"/>
                                 <TextBlock Style="{StaticResource Toggl.CaptionBlackText}"
-                                           Margin="0 12 0 0">
-                                    {DynamicResource s_all_data_is_private_only_you_can_see_it}
-                                </TextBlock>
+                                           Margin="0 12 0 0" Text="{DynamicResource s_all_data_is_private_only_you_can_see_it}"/>
                                 <Label HorizontalAlignment="Center"
                                        Margin="0 12 0 0">
                                     <Hyperlink NavigateUri="https://support.toggl.com/en/articles/3836325-toggl-desktop-for-windows"
                                                Style="{StaticResource Toggl.NormalHyperlink}"
-                                               Command="{Binding OpenTogglHelpUri}">
-                                        {DynamicResource s_learn_more}
-                                    </Hyperlink>
+                                               Command="{Binding OpenTogglHelpUri}"><Run Text="{DynamicResource s_learn_more}"/></Hyperlink>
                                 </Label>
                             </StackPanel>
                         </Border>

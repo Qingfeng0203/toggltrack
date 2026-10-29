@@ -66,9 +66,9 @@
                         <TextBlock Margin="0 32 0 0" Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_light_dark_mode}" />
                         <ComboBox x:Name="themeComboBox" Margin="0 6 0 0" Width="360"
                                   HorizontalAlignment="Left">
-                            <ComboBoxItem IsSelected="True">{DynamicResource s_use_my_windows_mode}</ComboBoxItem>
-                            <ComboBoxItem>{DynamicResource s_light}</ComboBoxItem>
-                            <ComboBoxItem>{DynamicResource s_dark}</ComboBoxItem>
+                            <ComboBoxItem IsSelected="True" Content="{DynamicResource s_use_my_windows_mode}"/>
+                            <ComboBoxItem Content="{DynamicResource s_light}"/>
+                            <ComboBoxItem Content="{DynamicResource s_dark}"/>
                         </ComboBox>
                         <TextBlock Margin="0 32 0 0" Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_set_up_shortcuts}" />
                         <Grid Margin="0 16 0 0" HorizontalAlignment="Left">
@@ -406,11 +406,11 @@
                                Text="{DynamicResource s_proxy}" />
                     <RadioButton Name="useNoProxyRadioButton" x:FieldModifier="private" GroupName="Proxy"
                                          IsChecked="True"
-                                    Margin="0 18 0 0">{DynamicResource s_do_not_use_proxy}</RadioButton>
+                                    Margin="0 18 0 0" Content="{DynamicResource s_do_not_use_proxy}"/>
                     <RadioButton Name="useSystemProxySettingsCheckBox" x:FieldModifier="private" GroupName="Proxy"
-                                    Margin="0 12 0 0">{DynamicResource s_use_system_proxy_settings}</RadioButton>
+                                    Margin="0 12 0 0" Content="{DynamicResource s_use_system_proxy_settings}"/>
                     <RadioButton Name="useProxyCheckBox" x:FieldModifier="private" GroupName="Proxy"
-                                      Margin="0 12 0 0">{DynamicResource s_use_proxy_to_connect_to_toggl}</RadioButton>
+                                      Margin="0 12 0 0" Content="{DynamicResource s_use_proxy_to_connect_to_toggl}"/>
                     <StackPanel Margin="0 30 0 0" IsEnabled="{Binding ElementName=useProxyCheckBox, Path=IsChecked}">
                         <TextBlock Style="{DynamicResource Toggl.BodyText}"
                                    Text="{DynamicResource s_proxy_settings}" />

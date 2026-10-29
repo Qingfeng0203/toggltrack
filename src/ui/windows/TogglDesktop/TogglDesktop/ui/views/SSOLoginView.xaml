@@ -15,7 +15,7 @@
             <DataTemplate x:Key="SignOnView">
                 <DockPanel >
                     <StackPanel DockPanel.Dock="Top">
-                        <TextBlock Style="{DynamicResource Toggl.SubtitleText}" HorizontalAlignment="Center">{DynamicResource s_single_sign_on}</TextBlock>
+                        <TextBlock Style="{DynamicResource Toggl.SubtitleText}" HorizontalAlignment="Center" Text="{DynamicResource s_single_sign_on}"/>
                         <TextBox x:Name="emailTextBox"
                                  Margin="0 20 0 0"
                                  Width="200"
@@ -35,9 +35,7 @@
                            DockPanel.Dock="Bottom"
                            VerticalAlignment="Bottom">
                         <Hyperlink Style="{StaticResource Toggl.NormalHyperlink}"
-                                   Command="{Binding LoginWithDifferentMethod}">
-                            {DynamicResource s_log_in_with_a_different_method}
-                        </Hyperlink>
+                                   Command="{Binding LoginWithDifferentMethod}"><Run Text="{DynamicResource s_log_in_with_a_different_method}"/></Hyperlink>
                     </Label>
                 </DockPanel>
             </DataTemplate>
@@ -48,12 +46,12 @@
                             Style="{DynamicResource Toggl.SubtitleText}" 
                             HorizontalAlignment="Center"
                             TextAlignment="Center"
-                            TextWrapping="Wrap">{DynamicResource s_an_account_with_this_email_already_exists}</TextBlock>
+                            TextWrapping="Wrap" Text="{DynamicResource s_an_account_with_this_email_already_exists}"/>
                         <TextBlock 
                             Style="{DynamicResource Toggl.CaptionBlackText}" 
                             HorizontalAlignment="Center"
                             Margin="30 10 30 0"
-                            TextAlignment="Center">{DynamicResource s_to_enable_log_in_with_sso_for_this_account_pleas}</TextBlock>
+                            TextAlignment="Center" Text="{DynamicResource s_to_enable_log_in_with_sso_for_this_account_pleas}"/>
                         <Button Height="32" Width="200" Margin="0 20 0 0"
                                 Style="{StaticResource Toggl.SecondaryAccentButton}"
                                 Content="{DynamicResource s_log_in_to_enable_sso}"
@@ -66,9 +64,7 @@
                            DockPanel.Dock="Bottom"
                            VerticalAlignment="Bottom">
                         <Hyperlink Style="{StaticResource Toggl.NormalHyperlink}"
-                                   Command="{Binding BackToSSOLogin}">
-                            {DynamicResource s_back_to_sso_login_page}
-                        </Hyperlink>
+                                   Command="{Binding BackToSSOLogin}"><Run Text="{DynamicResource s_back_to_sso_login_page}"/></Hyperlink>
                     </Label>
                 </DockPanel>
             </DataTemplate>

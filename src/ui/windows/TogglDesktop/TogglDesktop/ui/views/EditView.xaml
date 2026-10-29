@@ -157,7 +157,7 @@
                                         </Border>
 
                                         <StackPanel Grid.Row="3" Margin="0 14 0 0" Orientation="Horizontal">
-                                            <CheckBox Name="isProjectPrivateCheckBox">{DynamicResource s_private_project}</CheckBox>
+                                            <CheckBox Name="isProjectPrivateCheckBox" Content="{DynamicResource s_private_project}"/>
                                             <Canvas Height="16" Width="16" Margin="5 0 0 2"
                                                     ToolTip="{DynamicResource s_private_projects_are_visible_only_to_their_assig}"
                                                     ToolTipService.InitialShowDelay="0">
@@ -167,8 +167,8 @@
 
                                         <StackPanel Grid.Row="4" Margin="0 50 0 0" Height="32" Visibility="Visible"
                                                     Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <Button Style="{StaticResource Toggl.PrimaryButton}" Width="123" Click="projectSaveButton_Click">{DynamicResource s_create_project}</Button>
-                                            <Button Style="{StaticResource Toggl.OutlinedButton}" Margin="8 0 0 0" Width="79" Click="projectCancelButton_Click">{DynamicResource s_cancel}</Button>
+                                            <Button Style="{StaticResource Toggl.PrimaryButton}" Width="123" Click="projectSaveButton_Click" Content="{DynamicResource s_create_project}"/>
+                                            <Button Style="{StaticResource Toggl.OutlinedButton}" Margin="8 0 0 0" Width="79" Click="projectCancelButton_Click" Content="{DynamicResource s_cancel}"/>
                                         </StackPanel>
 
                                     </Grid>
@@ -238,7 +238,7 @@
                 <TextBlock Margin="0 14 0 0" LineHeight="20" FontSize="{DynamicResource NormalFontSize}">
                     <Hyperlink Foreground="{DynamicResource Toggl.ValidationErrorBackground}"
                                Click="deleteButton_OnClick"
-                               TextDecorations="{x:Null}">{DynamicResource s_delete}</Hyperlink>
+                               TextDecorations="{x:Null}"><Run Text="{DynamicResource s_delete}"/></Hyperlink>
                 </TextBlock>
 
             </StackPanel>

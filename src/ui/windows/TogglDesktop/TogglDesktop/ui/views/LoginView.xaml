@@ -59,7 +59,7 @@
                     <TextBlock Style="{DynamicResource Toggl.SubtitleText}" 
                                Visibility="{Binding SelectedConfirmAction, Converter={StaticResource HasAnyFlagToVisibilityConverter}, ConverterParameter={x:Static viewModels:ConfirmAction.LinkSSO}}"
                                TextAlignment="Center"
-                               Margin="0 12 0 10">{DynamicResource s_log_in_to_enable_sso} </TextBlock>
+                               Margin="0 12 0 10" Text="{DynamicResource s_log_in_to_enable_sso}"/>
                     <TextBox x:Name="emailTextBox" x:FieldModifier="private"
                              Margin="0 12 0 0"
                              Width="200"
@@ -115,7 +115,7 @@
                            Margin="48 16 0 0"
                            Visibility="{Binding SelectedConfirmAction, Converter={StaticResource HasAnyFlagToVisibilityConverter}, ConverterParameter={x:Static viewModels:ConfirmAction.LogInAndLinkSSO}}">
                         <Hyperlink Style="{StaticResource Toggl.NormalHyperlink}"
-                                   Click="onForgotPasswordLinkClick">{DynamicResource s_forgot_password}</Hyperlink>
+                                   Click="onForgotPasswordLinkClick"><Run Text="{DynamicResource s_forgot_password}"/></Hyperlink>
                     </Label>
 
                     <Grid Margin="0 4 0 12"
@@ -151,20 +151,16 @@
                               IsChecked="{Binding IsTosChecked, ValidatesOnDataErrors=True, NotifyOnValidationError=True}">
                         <WrapPanel Margin="0 0 0 -12" HorizontalAlignment="Left">
                             <TextBlock Style="{DynamicResource Toggl.CaptionText}">
-                                {DynamicResource s_i_agree_to}
+                                <Run Text="{DynamicResource s_i_agree_to}"/>
                                 <Hyperlink
                                     NavigateUri="https://toggl.com/legal/terms"
                                     RequestNavigate="Hyperlink_RequestNavigate"
-                                    Style="{StaticResource Toggl.NormalHyperlink}">
-                                    {DynamicResource s_terms_of_service}
-                                </Hyperlink>
-                                <LineBreak/> {DynamicResource s_and}
+                                    Style="{StaticResource Toggl.NormalHyperlink}"><Run Text="{DynamicResource s_terms_of_service}"/></Hyperlink>
+                                <LineBreak/> <Run Text="{DynamicResource s_and}"/>
                                 <Hyperlink
                                     NavigateUri="https://toggl.com/legal/privacy"
                                     RequestNavigate="Hyperlink_RequestNavigate"
-                                    Style="{StaticResource Toggl.NormalHyperlink}">
-                                    {DynamicResource s_privacy_policy}
-                                </Hyperlink>
+                                    Style="{StaticResource Toggl.NormalHyperlink}"><Run Text="{DynamicResource s_privacy_policy}"/></Hyperlink>
                             </TextBlock>
                         </WrapPanel>
                     </CheckBox>
@@ -207,7 +203,7 @@
                            Margin="0 10 0 0"
                            Visibility="{Binding SelectedConfirmAction, Converter={StaticResource EnumEqualToVisibilityConverter}, ConverterParameter={x:Static viewModels:ConfirmAction.LogIn}}">
                         <Hyperlink Style="{StaticResource Toggl.NormalHyperlink}"
-                                   Command="{Binding LoginWithSSO}">{DynamicResource s_log_in_with_sso}</Hyperlink>
+                                   Command="{Binding LoginWithSSO}"><Run Text="{DynamicResource s_log_in_with_sso}"/></Hyperlink>
                     </Label>
                 </StackPanel>
             </DockPanel>

@@ -27,9 +27,9 @@
                             VerticalAlignment="Top">
 
                     <TextBlock TextAlignment="Center" Margin="0 8 35 0">
-                        {DynamicResource s_click_here}
+                        <Run Text="{DynamicResource s_click_here}"/>
                         <LineBreak />
-                        {DynamicResource s_to} <Bold>{DynamicResource s_stop_2}</Bold>
+                        <Run Text="{DynamicResource s_to}"/> <Bold><Run Text="{DynamicResource s_stop_2}"/></Bold>
                     </TextBlock>
 
 

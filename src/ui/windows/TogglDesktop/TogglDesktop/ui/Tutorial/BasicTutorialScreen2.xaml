@@ -27,8 +27,8 @@
                     <Image Source="/TogglDesktop;component/Resources/tutorial-arrow-curved.png"
                                 Height="22" VerticalAlignment="Top" Margin="10 -10 5 0"/>
                     <TextBlock Margin="0 3 0 0" TextAlignment="Center">
-                        {DynamicResource s_click_here_and_tell_us}<LineBreak />
-                        {DynamicResource s_what_you_are_doing}
+                        <Run Text="{DynamicResource s_click_here_and_tell_us}"/><LineBreak />
+                        <Run Text="{DynamicResource s_what_you_are_doing}"/>
                     </TextBlock>
                     
                 </StackPanel>
