@@ -106,7 +106,9 @@ Context::Context(const std::string &app_name, const std::string &app_version)
 
     Poco::Crypto::OpenSSLInitializer::initialize();
 
-    logger.debug("LocalMode = ", urls::LocalMode());
+    // 注意：不要在这里打 LocalMode 的值——C# 侧在 toggl_context_init
+    // 之后才调用 toggl_set_local_mode，这里打出的一定是默认值，会误导排障。
+    // 模式是否生效看 "Local mode: using offline user" 这条日志。
 
     startPeriodicUpdateCheck();
 
@@ -1073,8 +1075,11 @@ error Context::displayError(const error &err) {
         urls::SetImATeapot(false);
     }
 
-    if (user_ && (err.find(kRequestIsNotPossible) != std::string::npos
-                  || (err.find(kForbiddenError) != std::string::npos))) {
+    // 本地模式永远有工作区（离线用户自带），
+    // 不去服务器拉工作区列表，也不显示"无访问权限"遮罩。
+    if (user_ && !urls::LocalMode()
+            && (err.find(kRequestIsNotPossible) != std::string::npos
+                || (err.find(kForbiddenError) != std::string::npos))) {
         error err = pullWorkspaces();
         if (err != noError) {
             // Check for missing WS error and
@@ -1859,6 +1864,11 @@ bool Context::lessThanVersion(const std::string& version1, const std::string& ve
 
 void Context::TimelineUpdateServerSettings() {
     logger.debug("TimelineUpdateServerSettings");
+
+    // 本地模式不上传时间线，也没有服务器可拉设置
+    if (urls::LocalMode()) {
+        return;
+    }
 
     next_update_timeline_settings_at_ =
         postpone(kRequestThrottleSeconds * kOneSecondInMicros);
@@ -6443,6 +6453,11 @@ bool Context::isTimeLockedInWorkspace(time_t t, Workspace* ws) {
 }
 
 error Context::pullWorkspaces() {
+    // 本地模式没有服务器可拉，离线用户自带工作区
+    if (urls::LocalMode()) {
+        return noError;
+    }
+
     std::string api_token = user_->APIToken();
 
     if (api_token.empty()) {

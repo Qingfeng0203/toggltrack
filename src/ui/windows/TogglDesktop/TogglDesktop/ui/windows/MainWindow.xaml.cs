@@ -423,6 +423,13 @@ namespace TogglDesktop
             if (this.TryBeginInvoke(this.onOverlay, type))
                 return;
 
+            // 本地模式没有"失去工作区"这种状态（离线用户自带工作区），
+            // 这个遮罩一旦盖上来整窗都点不动，所以一律不显示。
+            if (Toggl.IsLocalMode())
+            {
+                return;
+            }
+
             this.overlayView.setType((int)type);
             this.setActiveView(this.overlayView);
         }

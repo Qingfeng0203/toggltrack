@@ -290,7 +290,21 @@ HTTPResponse HTTPClient::makeHttpRequest(
 
     HTTPResponse resp;
 
-    if (!urls::RequestsAllowed()) {
+    if (urls::RequestsAllowed()) {
+        // 本地模式唯一允许的网络请求是发往镜像服务器的推送；
+        // 其余一律在这里拦下，绝不发出。这是兜底：
+        // 已知的联网路径都已在各调用点短路，这里是防漏网之鱼。
+        if (urls::LocalMode()) {
+            bool is_mirror_push = urls::HasMirrorURL()
+                                  && req.host == urls::MirrorURL();
+            if (!is_mirror_push) {
+                logger().debug(
+                    "Blocked request in local mode: ", req.relative_url);
+                resp.err = error(kCannotConnectError);
+                return resp;
+            }
+        }
+    } else {
         resp.err = error(kCannotSyncInTestEnv);
         return resp;
     }
