@@ -166,7 +166,11 @@ void ServerStatus::UpdateStatus(const Poco::Int64 code) {
 
     if (code >= 500 && code < 600) {
         fast_retry_ = 500 != code;
-        startStatusCheck();
+        // 本地模式下唯一可能的请求是镜像推送；镜像服务器挂了也不该
+        // 拉起对官方 /api/v9/status 的轮询。
+        if (!urls::LocalMode()) {
+            startStatusCheck();
+        }
         return;
     }
 

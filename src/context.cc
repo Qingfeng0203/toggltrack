@@ -106,6 +106,8 @@ Context::Context(const std::string &app_name, const std::string &app_version)
 
     Poco::Crypto::OpenSSLInitializer::initialize();
 
+    logger.debug("LocalMode = ", urls::LocalMode());
+
     startPeriodicUpdateCheck();
 
     startPeriodicSync();
@@ -1361,6 +1363,11 @@ void Context::onFetchUpdates(Poco::Util::TimerTask&) {  // NOLINT
 void Context::startPeriodicSync() {
     logger.trace("startPeriodicSync");
 
+    // 本地模式不需要同步线程：Sync() 里已经短路，这里连定时器都不排
+    if (urls::LocalMode()) {
+        return;
+    }
+
     Poco::Util::TimerTask::Ptr ptask =
         new Poco::Util::TimerTaskAdapter<Context>
     (*this, &Context::onPeriodicSync);
@@ -1386,6 +1393,11 @@ void Context::onPeriodicSync(Poco::Util::TimerTask&) {  // NOLINT
 void Context::startPeriodicUpdateCheck() {
     logger.debug("startPeriodicUpdateCheck");
 
+    // 本地模式不检查/下载更新：那是 Toggl 后端与官方更新通道的能力
+    if (urls::LocalMode()) {
+        return;
+    }
+
     Poco::Util::TimerTask::Ptr ptask =
         new Poco::Util::TimerTaskAdapter<Context>
     (*this, &Context::onPeriodicUpdateCheck);
@@ -1409,6 +1421,11 @@ void Context::onPeriodicUpdateCheck(Poco::Util::TimerTask&) {  // NOLINT
 
 void Context::startPeriodicInAppMessageCheck() {
     logger.debug("startPeriodicInAppMessageCheck");
+
+    // 本地模式没有站内信可拉（fetchMessage 也会短路）
+    if (urls::LocalMode()) {
+        return;
+    }
 
     Poco::Util::TimerTask::Ptr ptask =
         new Poco::Util::TimerTaskAdapter<Context>
@@ -1473,6 +1490,11 @@ void Context::executeUpdateCheck() {
 
 error Context::downloadUpdate() {
     try {
+        // 本地模式不向官方更新通道发任何请求
+        if (urls::LocalMode()) {
+            return noError;
+        }
+
         if (update_check_disabled_) {
             return noError;
         }

@@ -1356,8 +1356,27 @@ public static partial class Toggl
 
         // 必须在 toggl_ui_start 之前：它决定启动时是否要求登录，
         // 以及是否要拉起同步线程。
-        toggl_set_local_mode(LocalModeStore.IsEnabled);
-        Console.WriteLine("LocalMode = {0}", LocalModeStore.IsEnabled);
+        var wantLocalMode = LocalModeStore.IsEnabled;
+        try
+        {
+            toggl_set_local_mode(wantLocalMode);
+            var actual = toggl_local_mode();
+            Console.WriteLine("LocalMode = {0} (requested {1})", actual, wantLocalMode);
+            if (actual != wantLocalMode)
+            {
+                Console.WriteLine(
+                    "WARNING: local mode did not take effect. The native library " +
+                    "(TogglDesktopDLL.dll) and this executable are from different builds.");
+            }
+        }
+        catch (EntryPointNotFoundException)
+        {
+            // 旧版原生库没有这个导出：说明 exe 与 DLL 不是同一次构建。
+            // 这时退化为登录模式，但要把原因说清楚，避免"明明改了却还是要登录"。
+            Console.WriteLine(
+                "WARNING: TogglDesktopDLL.dll does not support local mode. " +
+                "Replace the whole TogglDesktop folder with files from one build.");
+        }
 
         // 必须在发起任何请求之前设置：推送时会读它
         var mirrorUrl = MirrorUrlStore.Load();
