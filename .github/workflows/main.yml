@@ -1,9 +1,10 @@
 name: Build
 
 on:
-  push:
-    branches:
-      - '**'
+  # 上游打包流水线（macOS/Linux/Windows 安装包）依赖 macOS-latest 与 windows-2019 镜像，
+  # 后者已于 2025-06-30 下线，每次 push 都会产生必然失败的运行。
+  # 本仓库只用 GitHub 做 Windows 编译（build-windows.yml），故此处改为仅手动/发布触发。
+  workflow_dispatch:
   release:
     types: [ created ]
 
