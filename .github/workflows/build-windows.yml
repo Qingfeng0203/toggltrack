@@ -1,0 +1,90 @@
+name: Build Windows
+
+# 手动触发，或推送到 main 时自动编译
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-x64:
+    # 必须固定 windows-2022：
+    #   1) 自带 VS2022 + v142（VS2019）工具集，本工程的 vcxproj 全是 v142
+    #   2) 自带 UWP 组件组（TogglDesktop 引用了 Windows.winmd）
+    #   3) 不要用 windows-latest，标签会随 GitHub 升级漂移，某天突然换 VS 版本就崩
+    runs-on: windows-2022
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 补装 .NET Framework 4.6.1 目标包
+        # 镜像里只有 4.5.2 / 4.6 / 4.6.2 / 4.7.x / 4.8.x，没有 4.6.1
+        # 用官方 ReferenceAssemblies 包铺进去，比装整个 Developer Pack 快
+        shell: pwsh
+        run: |
+          $target = "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1"
+          if (Test-Path (Join-Path $target "mscorlib.dll")) {
+            Write-Host "4.6.1 目标包已存在，跳过"
+            exit 0
+          }
+          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Microsoft.NETFramework.ReferenceAssemblies.net461/1.0.3" -OutFile net461.nupkg
+          Expand-Archive net461.nupkg -DestinationPath net461 -Force
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item "net461\build\.NETFramework\v4.6.1\*" -Destination $target -Recurse -Force
+          Write-Host "已安装到 $target"
+
+      - name: 改写 csproj 里硬编码的 Windows SDK 路径
+        # TogglDesktop.csproj 写死了 10.0.16299.0（2017 年的 SDK），
+        # 镜像里没有这个版本，直接编译会报找不到 Windows.winmd。
+        # 这里按本机实际安装的最新 SDK 重新指向，不改工程文件逻辑。
+        shell: pwsh
+        run: |
+          $csproj = "src\ui\windows\TogglDesktop\TogglDesktop\TogglDesktop.csproj"
+          $kits = "C:\Program Files (x86)\Windows Kits\10"
+
+          $union = Get-ChildItem "$kits\UnionMetadata" -Recurse -Filter "Windows.winmd" -ErrorAction SilentlyContinue |
+                   Sort-Object FullName -Descending | Select-Object -First 1
+          $found = Get-ChildItem "$kits\References" -Recurse -Filter "Windows.Foundation.FoundationContract.winmd" -ErrorAction SilentlyContinue |
+                   Sort-Object FullName -Descending | Select-Object -First 1
+          $universal = Get-ChildItem "$kits\References" -Recurse -Filter "Windows.Foundation.UniversalApiContract.winmd" -ErrorAction SilentlyContinue |
+                   Sort-Object FullName -Descending | Select-Object -First 1
+
+          if (-not $union -or -not $found -or -not $universal) { throw "Windows SDK 参考文件没找到，镜像可能变了" }
+          Write-Host "Windows.winmd            -> $($union.FullName)"
+          Write-Host "FoundationContract.winmd -> $($found.FullName)"
+          Write-Host "UniversalApiContract.winmd -> $($universal.FullName)"
+
+          $c = Get-Content $csproj -Raw
+          $c = $c.Replace("C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.16299.0\Windows.winmd", $union.FullName)
+          $c = $c.Replace("C:\Program Files (x86)\Windows Kits\10\References\10.0.16299.0\Windows.Foundation.FoundationContract\3.0.0.0\Windows.Foundation.FoundationContract.winmd", $found.FullName)
+          $c = $c.Replace("C:\Program Files (x86)\Windows Kits\10\References\10.0.16299.0\Windows.Foundation.UniversalApiContract\5.0.0.0\Windows.Foundation.UniversalApiContract.winmd", $universal.FullName)
+          Set-Content -Path $csproj -Value $c -Encoding UTF8 -NoNewline
+
+      - name: NuGet 还原 + 编译
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" | Select-Object -First 1
+          if (-not $msbuild) { throw "找不到 MSBuild" }
+          Write-Host "MSBuild: $msbuild"
+
+          $sln = "src\ui\windows\TogglDesktop\TogglDesktop.sln"
+
+          # 参数照抄上游自己的 CI（main.yml 的 windows-64bit job）：
+          #   /t:Clean,Build /restore /m /p:Configuration=Release /p:Platform=x64
+          # 上游那步跑在 windows-2019 镜像上，该镜像 2025-06-30 已被 GitHub 下线，
+          # 所以镜像必须换，前面那两个前置步骤就是换镜像后必须补的差异。
+          #
+          # 这个 sln 会把 POCO 十个工程一起从源码编译，首次大约 10-20 分钟，不是卡死。
+          & $msbuild $sln '/p:Configuration=Release' '/p:Platform=x64' '/t:Clean,Build' '/restore' '/m' '/v:m' '/nologo'
+          if ($LASTEXITCODE -ne 0) { throw "编译失败（退出码 $LASTEXITCODE）" }
+
+      - name: 收集产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: TogglDesktop-x64-Release
+          path: |
+            src/ui/windows/TogglDesktop/TogglDesktop/bin/x64/Release/
+          if-no-files-found: error
+          retention-days: 14

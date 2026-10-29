@@ -1,0 +1,471 @@
+﻿<mah:MetroWindow x:Class="TogglDesktop.PreferencesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:toggl="clr-namespace:TogglDesktop"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:behaviors="clr-namespace:TogglDesktop.Behaviors"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:viewModels="clr-namespace:TogglDesktop.ViewModels"
+        mc:Ignorable="d" 
+        Height="760" Width="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Toggl.CardBackground}"
+        Title="{DynamicResource s_preferences}"
+        d:DataContext="{d:DesignInstance viewModels:PreferencesWindowViewModel, IsDesignTimeCreatable=False}"
+        Style="{StaticResource Toggl.ToolWindow}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/DesignUpdate/MahApps.Overrides.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <i:Interaction.Behaviors>
+        <behaviors:HideWindowOnClosingBehavior />
+        <behaviors:CloseWindowOnEscBehavior />
+        <behaviors:FocusParentWindowOnClosingBehavior />
+    </i:Interaction.Behaviors>
+    <!-- content -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- tabbed content -->
+        <TabControl Grid.Row="0" TabStripPlacement="Top">
+            <TabItem Header="{DynamicResource s_general}">
+                <ScrollViewer>
+                    <StackPanel Margin="24 32 24 48">
+                        <!-- 界面语言。选项名用各自语言书写，切换前也能认出来。 -->
+                        <TextBlock Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_language}" />
+                        <ComboBox x:Name="languageComboBox" Margin="0 6 0 0" Width="360"
+                                  HorizontalAlignment="Left"
+                                  SelectionChanged="languageComboBoxSelectionChanged">
+                            <ComboBoxItem Tag="en">English</ComboBoxItem>
+                            <ComboBoxItem Tag="zh-CN">简体中文</ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock Margin="0 6 0 0" Width="360" HorizontalAlignment="Left"
+                                   Style="{DynamicResource Toggl.BodyGrayText}"
+                                   Text="{DynamicResource s_language_hint}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Margin="0 32 0 0" Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_light_dark_mode}" />
+                        <ComboBox x:Name="themeComboBox" Margin="0 6 0 0" Width="360"
+                                  HorizontalAlignment="Left">
+                            <ComboBoxItem IsSelected="True">{DynamicResource s_use_my_windows_mode}</ComboBoxItem>
+                            <ComboBoxItem>{DynamicResource s_light}</ComboBoxItem>
+                            <ComboBoxItem>{DynamicResource s_dark}</ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock Margin="0 32 0 0" Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_set_up_shortcuts}" />
+                        <Grid Margin="0 16 0 0" HorizontalAlignment="Left">
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="160"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource Toggl.BodyText}" VerticalAlignment="Center" Text="{DynamicResource s_show_hide_toggl_track}" />
+                            <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource Toggl.BodyText}" VerticalAlignment="Center" Text="{DynamicResource s_continue_stop_timer}" />
+                            <mah:HotKeyBox Grid.Column="1" Grid.Row="0"
+                                           Margin="16 0 0 0"
+                                           AreModifierKeysRequired="True"
+                                           mah:TextBoxHelper.Watermark="Record shortcut"
+                                           HotKey="{Binding ShowHideToggl, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"/>
+                            <mah:HotKeyBox Grid.Column="1" Grid.Row="1"
+                                           Margin="16 8 0 0"
+                                           AreModifierKeysRequired="True"
+                                           mah:TextBoxHelper.Watermark="Record shortcut"
+                                           HotKey="{Binding ContinueStopTimer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"/>
+                        </Grid>
+
+                        <TextBlock Style="{DynamicResource Toggl.TitleText}" Margin="0 32 0 0"
+                                   Text="{DynamicResource s_set_default_project}" />
+
+                        <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
+                                   Text="{DynamicResource s_default_project_will_be_selected_when_timer_is_s}" />
+
+                        <Border Margin="0 12 0 0" Style="{StaticResource Toggl.Border.Hoverable}"
+                                Name="defaultProjectBorder"
+                                HorizontalAlignment="Left"
+                                Width="360">
+                            <Grid Height="32">
+                                <toggl:ProjectTextBox
+                                    x:Name="defaultProjectTextBox" x:FieldModifier="private"
+                                    Style="{StaticResource {x:Type TextBox}}"
+                                    BorderThickness="0"
+                                    Padding="24 0 34 0"
+                                    mah:TextBoxHelper.Watermark="No project selected"
+                                    LostKeyboardFocus="defaultProjectTextBox_OnLostKeyboardFocus"/>
+                                <ToggleButton
+                                    x:Name="defaultProjectDropDownButton" x:FieldModifier="private"
+                                    Style="{StaticResource Toggl.AutoCompleteDropDownToggleButton}"/>
+                                <toggl:AutoCompletionPopup
+                                    x:Name="defaultProjectAutoComplete" x:FieldModifier="private"
+                                    Target="{Binding ElementName=defaultProjectBorder}"
+                                    TextBox="{Binding ElementName=defaultProjectTextBox}"
+                                    DropDownButton="{Binding ElementName=defaultProjectDropDownButton}"
+                                    ConfirmCompletion="defaultProjectAutoComplete_OnConfirmCompletion"
+                                    ConfirmWithoutCompletion="defaultProjectAutoComplete_OnConfirmWithoutCompletion"/>
+                                <Border
+                                    Style="{StaticResource ProjectColorCircle}"
+                                    Name="defaultProjectColorCircle" x:FieldModifier="private"/>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Style="{DynamicResource Toggl.TitleText}" Margin="0 32 0 16"
+                                   Text="{DynamicResource s_use_time_tracking_helpers}" />
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}"
+                                   Text="{DynamicResource s_idle_notification}" />
+                        <TextBlock Style="{DynamicResource Toggl.CaptionText}"  Margin="0 4 0 0"
+                                   Text="{DynamicResource s_you_ll_be_notified_when_timer_keeps_running_afte}" />
+                        <Grid Margin="0 8 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="136" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <mah:ToggleSwitch Grid.Column="0"
+                                              VerticalAlignment="Center"
+                                              Name="idleDetectionCheckBox" x:FieldModifier="private" />
+                            <TextBlock Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       Text="{DynamicResource s_notify_after}"
+                                       IsEnabled="{Binding ElementName=idleDetectionCheckBox, Path=IsChecked}"/>
+                            <TextBox Grid.Column="2"
+                                     Width="64"
+                                     Margin="8 0"
+                                     Name="idleDetectionDurationTextBox" x:FieldModifier="private"
+                                     IsEnabled="{Binding ElementName=idleDetectionCheckBox, Path=IsChecked}"
+                                     TextAlignment="Right">
+                                <i:Interaction.Behaviors>
+                                    <behaviors:NumericInputTextBoxBehavior />
+                                </i:Interaction.Behaviors>
+                            </TextBox>
+                            <TextBlock Grid.Column="3"
+                                       VerticalAlignment="Center"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       Text="{DynamicResource s_minutes}"
+                                       IsEnabled="{Binding ElementName=idleDetectionCheckBox, Path=IsChecked}"/>
+                        </Grid>
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 24 0 0"
+                                   Text="{DynamicResource s_pomodoro_timer}" />
+                        <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
+                                   Text="{DynamicResource s_when_you_start_tracking_time_pomodoro_timer_is_l}" />
+                        <Grid Margin="0 8 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="136" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <mah:ToggleSwitch Grid.Column="0"
+                                              VerticalAlignment="Center"
+                                              Name="enablePomodoroCheckBox" x:FieldModifier="private" />
+                            <TextBlock Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       Text="{DynamicResource s_interval}"
+                                       IsEnabled="{Binding ElementName=enablePomodoroCheckBox, Path=IsChecked}"/>
+                            <TextBox Grid.Column="2"
+                                     Width="64"
+                                     Margin="8 0"
+                                     Name="pomodoroTimerDuration" x:FieldModifier="private"
+                                     IsEnabled="{Binding ElementName=enablePomodoroCheckBox, Path=IsChecked}"
+                                     TextAlignment="Right">
+                                <i:Interaction.Behaviors>
+                                    <behaviors:NumericInputTextBoxBehavior />
+                                </i:Interaction.Behaviors>
+                            </TextBox>
+                            <TextBlock Grid.Column="3" VerticalAlignment="Center"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       Text="{DynamicResource s_minutes}"
+                                       IsEnabled="{Binding ElementName=enablePomodoroCheckBox, Path=IsChecked}"/>
+                        </Grid>
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 8 0 0"
+                                   Text="{DynamicResource s_pomodoro_break}" />
+                        <Grid Margin="0 8 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="136" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <mah:ToggleSwitch Grid.Column="0"
+                                              VerticalAlignment="Center"
+                                              Name="enablePomodoroBreakCheckBox" x:FieldModifier="private"
+                                              IsEnabled="{Binding ElementName=enablePomodoroCheckBox, Path=IsChecked}"/>
+                            <StackPanel Orientation="Horizontal"
+                                        Grid.Column="1">
+                                <StackPanel.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource AndConverter}">
+                                        <Binding ElementName="enablePomodoroBreakCheckBox" Path="IsChecked"/>
+                                        <Binding ElementName="enablePomodoroCheckBox" Path="IsChecked"/>
+                                    </MultiBinding>
+                                </StackPanel.IsEnabled>
+                                <TextBlock Width="80"
+                                           VerticalAlignment="Center"
+                                           Style="{DynamicResource Toggl.BodyText}"
+                                           Text="{DynamicResource s_interval}" />
+                                <TextBox Width="64"
+                                         Margin="8 0"
+                                         Name="pomodoroBreakTimerDuration" x:FieldModifier="private"
+                                         TextAlignment="Right">
+                                    <i:Interaction.Behaviors>
+                                        <behaviors:NumericInputTextBoxBehavior />
+                                    </i:Interaction.Behaviors>
+                                </TextBox>
+                                <TextBlock VerticalAlignment="Center"
+                                           Style="{DynamicResource Toggl.BodyText}"
+                                           Text="{DynamicResource s_minutes}" />
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Visibility="{Binding IsTimelineViewEnabled, Converter={StaticResource BooleanInvertToVisibilityConverter}}">
+                            <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 24 0 0"
+                                       Text="{DynamicResource s_record_activity}" />
+                            <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
+                                       Text="You'll have a timeline of all activity on your computer with a breakdown of time spent on applications and websites. Only you can access this data." />
+                            <mah:ToggleSwitch Margin="0 14 0 0"
+                                              Name="recordTimelineCheckBox" x:FieldModifier="private" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 24 0 0"
+                                   Text="{DynamicResource s_stop_timer_automatically}" />
+                        <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
+                                   Text="{DynamicResource s_when_your_computer_is_put_to_sleep_or_shut_down}" />
+                        <mah:ToggleSwitch Margin="0 14 0 0"
+                                          Name="onStopEntryCheckBox" x:FieldModifier="private" />
+                        <TextBlock Style="{DynamicResource Toggl.TitleText}" Margin="0 32 0 0"
+                                   Text="{DynamicResource s_toggl_window_settings}" />
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 16 0 0"
+                                   Text="{DynamicResource s_run_toggl_application_on_windows_login}" />
+                        <mah:ToggleSwitch Margin="0 14 0 0"
+                                          x:Name="launchOnStartupCheckBox" x:FieldModifier="private" />
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 20 0 0"
+                                   Text="{DynamicResource s_keep_toggl_on_top_of_other_windows}" />
+                        <mah:ToggleSwitch Margin="0 14 0 0"
+                                          Name="onTopCheckBox" x:FieldModifier="private" />
+                        <TextBlock Style="{DynamicResource Toggl.TitleText}" Margin="0 32 0 0"
+                                   Text="{DynamicResource s_time_editing_settings}" />
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 16 0 0"
+                                   Text="{DynamicResource s_when_start_time_of_an_entry_is_changed_modify}" />
+                        <StackPanel Orientation="Horizontal" Margin="0 8 0 0">
+                            <RadioButton Width="100"
+                                         GroupName="1"
+                                         Content="{DynamicResource s_duration_2}"
+                                         Name="keepEndTimeFixedCheckbox" x:FieldModifier="private"/>
+                            <RadioButton GroupName="1"
+                                         Content="{DynamicResource s_end_time}"
+                                         Name="keepDurationFixedCheckbox" x:FieldModifier="private" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Toggl.TitleText}" Margin="0 32 0 0"
+                                   Text="{DynamicResource s_clear_cache}" />
+                        <TextBlock Style="{StaticResource Toggl.CaptionText}" Margin="0 4 0 0"
+                                   Text="This will clear all Toggl local data and log you out. To avoid losing any time entries, please make sure they are successfully synced."/>
+                        <Button Style="{StaticResource Toggl.PrimaryButton}" Margin="0 8 0 0"
+                                Width="136"
+                                HorizontalAlignment="Left"
+                                Content="{DynamicResource s_clear_cache}"
+                                Command="{Binding ClearCacheCommand}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="{DynamicResource s_reminder}">
+                <StackPanel Margin="24 32 20 48">
+                    <TextBlock Style="{DynamicResource Toggl.TitleText}"
+                               Text="{DynamicResource s_remind_me_to_track_time}" />
+                    <TextBlock Margin="0 12 0 0"
+                               Style="{DynamicResource Toggl.CaptionText}"
+                               Text="{DynamicResource s_you_ll_get_a_notification_if_the_timer_hasn_t_be}" />
+                    <mah:ToggleSwitch Margin="0 14 0 0"
+                                      Name="remindToTrackCheckBox" x:FieldModifier="private" />
+                    <Grid Margin="0 42 0 0" IsEnabled="{Binding ElementName=remindToTrackCheckBox, Path=IsChecked}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Style="{DynamicResource Toggl.BodyText}"
+                                   VerticalAlignment="Center"
+                                   Text="{DynamicResource s_remind_me_after}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Style="{DynamicResource Toggl.BodyText}"
+                                   VerticalAlignment="Center"
+                                   Text="{DynamicResource s_remind_me_between}" />
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Style="{DynamicResource Toggl.BodyText}"
+                                   VerticalAlignment="Top"
+                                   Text="{DynamicResource s_remind_me_on_days}" />
+                        <StackPanel Orientation="Horizontal"
+                                    Grid.Row="0" Grid.Column="1">
+                            <TextBox Name="remindToTrackIntervalTextBox" x:FieldModifier="private"
+                                     Margin="0 0 8 0"
+                                     Width="64"
+                                     HorizontalContentAlignment="Right">
+                                <i:Interaction.Behaviors>
+                                    <behaviors:NumericInputTextBoxBehavior />
+                                </i:Interaction.Behaviors>
+                            </TextBox>
+                            <TextBlock Style="{DynamicResource Toggl.BodyText}"
+                                       Text="{DynamicResource s_minutes}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal"
+                                    Grid.Row="1" Grid.Column="1"
+                                    Margin="0 8 0 14">
+                            <TextBox Name="reminderStartTimeTextBox" x:FieldModifier="private"
+                                     Margin="0 0 8 0" Width="64"
+                                     HorizontalContentAlignment="Right" />
+                            <ContentControl Focusable="False" Content="{StaticResource Toggl.ArrowIcon}" />
+                            <TextBox Name="reminderEndTimeTextBox" x:FieldModifier="private"
+                                     Margin="7 0 0 0" Width="64"
+                                     HorizontalContentAlignment="Right" />
+                        </StackPanel>
+
+                        <toggl:DaysOfWeekSelector x:Name="daysOfWeekSelector" x:FieldModifier="private"
+                                                  Grid.Row="2" Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="{DynamicResource s_autotracker}">
+                <Grid Margin="24 32 20 0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Style="{StaticResource Toggl.TitleText}"
+                                   Text="{DynamicResource s_autotracker}" />
+                        <TextBlock Margin="0 12 0 0"
+                                   Style="{StaticResource Toggl.CaptionText}"
+                                   Text="Autotracker helps to make time tracking faster by triggering customized suggestions. When a selected app is open in the foreground, you'll get one of the prefilled suggestions." />
+                        <mah:ToggleSwitch Name="enableAutotrackerCheckbox" x:FieldModifier="private"
+                                          Margin="0 14 0 0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" IsEnabled="{Binding ElementName=enableAutotrackerCheckbox, Path=IsChecked}">
+                        <TextBlock Style="{StaticResource Toggl.BodyText}"
+                                   Margin="0 30 0 0"
+                                   Text="{DynamicResource s_allow_starting_tracking_automatically_without_sh}" />
+                        <mah:ToggleSwitch x:Name="startTrackingWithoutSuggestionCheckbox" x:FieldModifier="private"
+                                          Margin="0 14 0 0" />
+                    </StackPanel>
+
+                    <toggl:AutotrackerSettings Grid.Row="2" Margin="0 22 0 12" IsEnabled="{Binding ElementName=enableAutotrackerCheckbox, Path=IsChecked}"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="{DynamicResource s_mirror}">
+                <StackPanel Margin="24 32 20 48">
+                    <TextBlock Style="{DynamicResource Toggl.TitleText}"
+                               Text="{DynamicResource s_mirror}" />
+                    <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
+                               Width="420" HorizontalAlignment="Left" TextWrapping="Wrap"
+                               Text="{DynamicResource s_mirror_hint}" />
+                    <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 22 0 0"
+                               Text="{DynamicResource s_mirror_address}" />
+                    <TextBox x:Name="mirrorUrlTextBox" x:FieldModifier="private"
+                             Margin="0 6 0 0" Width="380" HorizontalAlignment="Left"
+                             mah:TextBoxHelper.Watermark="http://10.104.2.133:8080" />
+                    <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
+                               Width="420" HorizontalAlignment="Left" TextWrapping="Wrap"
+                               Text="{DynamicResource s_mirror_address_hint}" />
+                    <Button x:Name="resetMirrorUrlButton" x:FieldModifier="private"
+                            Margin="0 14 0 0" Width="160" HorizontalAlignment="Left"
+                            Style="{DynamicResource Toggl.PrimaryButton}"
+                            Content="{DynamicResource s_mirror_disable}"
+                            Click="resetMirrorUrlButtonClicked" />
+                    <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 18 0 0"
+                               Width="420" HorizontalAlignment="Left" TextWrapping="Wrap"
+                               Text="{DynamicResource s_mirror_note}" />
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="{DynamicResource s_proxy}">
+                <StackPanel Margin="24 32 20 48">
+                    <TextBlock Style="{DynamicResource Toggl.TitleText}"
+                               Text="{DynamicResource s_proxy}" />
+                    <RadioButton Name="useNoProxyRadioButton" x:FieldModifier="private" GroupName="Proxy"
+                                         IsChecked="True"
+                                    Margin="0 18 0 0">{DynamicResource s_do_not_use_proxy}</RadioButton>
+                    <RadioButton Name="useSystemProxySettingsCheckBox" x:FieldModifier="private" GroupName="Proxy"
+                                    Margin="0 12 0 0">{DynamicResource s_use_system_proxy_settings}</RadioButton>
+                    <RadioButton Name="useProxyCheckBox" x:FieldModifier="private" GroupName="Proxy"
+                                      Margin="0 12 0 0">{DynamicResource s_use_proxy_to_connect_to_toggl}</RadioButton>
+                    <StackPanel Margin="0 30 0 0" IsEnabled="{Binding ElementName=useProxyCheckBox, Path=IsChecked}">
+                        <TextBlock Style="{DynamicResource Toggl.BodyText}"
+                                   Text="{DynamicResource s_proxy_settings}" />
+                        <Grid Margin="0 24 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       VerticalAlignment="Center"
+                                       Text="{DynamicResource s_host}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       VerticalAlignment="Center"
+                                       Text="{DynamicResource s_port}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       VerticalAlignment="Center"
+                                       Text="{DynamicResource s_username}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       VerticalAlignment="Center"
+                                       Text="{DynamicResource s_password}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1"
+                                     Name="proxyHostTextBox" x:FieldModifier="private"
+                                     Text="{Binding ProxyHost, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0 8 0 0"
+                                     Name="proxyPortTextBox" x:FieldModifier="private"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Margin="0 8 0 0"
+                                     Name="proxyUsernameTextBox" x:FieldModifier="private"/>
+                            <PasswordBox Grid.Row="3" Grid.Column="1" Margin="0 8 0 0"
+                                         Name="proxyPasswordBox" x:FieldModifier="private"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <TextBlock Style="{DynamicResource Toggl.BodyText}"
+                               Margin="0 30 0 0"
+                                   Text="{DynamicResource s_ignore_ssl_verification}" />
+                    <TextBlock Style="{DynamicResource Toggl.CaptionText}"  Margin="0 4 0 0"
+                                   Text="{DynamicResource s_not_recommended_this_can_make_the_app_vulnerable}" />
+                    <mah:ToggleSwitch x:Name="ignoreCertificateToggleSwitch" x:FieldModifier="private"
+                                      Margin="0 8 0 0" />
+                    
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- save/cancel -->
+        <Border Grid.Row="1" BorderThickness="0 1 0 0" BorderBrush="{DynamicResource Toggl.LightGrayBrush}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,14">
+                <Button Click="saveButtonClicked"
+                        Style="{DynamicResource Toggl.AccentButton}"
+                        Width="92"
+                        Content="{DynamicResource s_save}" />
+                <Button Style="{DynamicResource Toggl.PrimaryButton}"
+                        Width="92"
+                        Margin="16,0,0,0"
+                        Content="{DynamicResource s_cancel}"
+                        behaviors:ButtonHelper.IsCloseWindowButton="True" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</mah:MetroWindow>
