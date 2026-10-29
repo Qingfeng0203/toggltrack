@@ -249,7 +249,8 @@ namespace TogglDesktop
 
         private static void canExecuteLogout(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = isLoggedIn;
+            // 本地模式没有账号，登出只会退回登录界面
+            e.CanExecute = isLoggedIn && !Toggl.IsLocalMode();
         }
 
         private static void onLogout(object sender, RoutedEventArgs e)

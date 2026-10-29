@@ -1215,6 +1215,10 @@ public static partial class Toggl
     private static void parseCommandlineParams()
     {
         string[] args = Environment.GetCommandLineArgs();
+
+        // --online / --no-local-mode 临时改回登录模式，--local-mode 强制本地模式
+        LocalModeStore.ApplyCommandLine(args);
+
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i].Contains("script") && args[i].Contains("path"))
@@ -1301,6 +1305,28 @@ public static partial class Toggl
         }
     }
 
+    /// <summary>当前是否运行在本地模式（免登录、不联网）。</summary>
+    public static bool IsLocalMode()
+    {
+        try
+        {
+            return toggl_local_mode();
+        }
+        catch (Exception)
+        {
+            return LocalModeStore.IsEnabled;
+        }
+    }
+
+    /// <summary>
+    /// 保存本地模式开关。库端的开关在启动时读取，
+    /// 所以切换后需要重启应用才会生效。
+    /// </summary>
+    public static void SetLocalMode(bool enabled)
+    {
+        LocalModeStore.SetEnabled(enabled);
+    }
+
     public static string LogAndDbFileName(string environment)
     {
         return environment == "production" ? "toggldesktop" : $"toggldesktop_{environment}";
@@ -1327,6 +1353,11 @@ public static partial class Toggl
         ctx = toggl_context_init("windows_native_app", version);
 
         toggl_set_environment(ctx, Env);
+
+        // 必须在 toggl_ui_start 之前：它决定启动时是否要求登录，
+        // 以及是否要拉起同步线程。
+        toggl_set_local_mode(LocalModeStore.IsEnabled);
+        Console.WriteLine("LocalMode = {0}", LocalModeStore.IsEnabled);
 
         // 必须在发起任何请求之前设置：推送时会读它
         var mirrorUrl = MirrorUrlStore.Load();

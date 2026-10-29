@@ -723,6 +723,16 @@ private static extern void toggl_set_server_url(
 [DllImport(dll, CharSet = charset, CallingConvention = convention)]
 private static extern string toggl_server_url();
 
+    // Local (no-login) mode
+
+[DllImport(dll, CharSet = charset, CallingConvention = convention)]
+private static extern void toggl_set_local_mode(
+    [MarshalAs(UnmanagedType.I1)] bool value);
+
+[DllImport(dll, CharSet = charset, CallingConvention = convention)]
+[return: MarshalAs(UnmanagedType.I1)]
+private static extern bool toggl_local_mode();
+
     // Mirror endpoint for time entries. Empty string disables it.
 
 [DllImport(dll, CharSet = charset, CallingConvention = convention)]

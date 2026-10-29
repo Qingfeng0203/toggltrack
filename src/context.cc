@@ -25,6 +25,7 @@
 #include "model/settings.h"
 #include "model/task.h"
 #include "model/time_entry.h"
+#include "model/workspace.h"
 #include "timeline_uploader.h"
 #include "urls.h"
 #include "window_change_recorder.h"
@@ -282,7 +283,23 @@ error Context::StartEvents() {
         }
         if (!user->ID()) {
             delete user;
-            setUser(nullptr);
+
+            if (!urls::LocalMode()) {
+                setUser(nullptr);
+                return noError;
+            }
+
+            // 本地模式：没有账号也要能用，构造一个只存在于本机的离线用户
+            User *offline_user = nullptr;
+            err = localUser(&offline_user);
+            if (err != noError) {
+                logger.error("Cannot bootstrap local user: ", err);
+                setUser(nullptr);
+                return displayError(err);
+            }
+            logger.debug("Local mode: using offline user without login");
+            setUser(offline_user);
+            updateUI(UIElements::Reset());
             return noError;
         }
         setUser(user);
@@ -338,12 +355,17 @@ error Context::save(const bool push_changes) {
         updateUI(render);
 
         if (push_changes) {
-            logger.debug("onPushChanges executing");
+            if (urls::LocalMode()) {
+                // 本地模式没有同步线程，改为把本次改动直接镜像出去
+                flushLocalTimeEntries(changes);
+            } else {
+                logger.debug("onPushChanges executing");
 
-            // Always sync asyncronously with syncerActivity
-            trigger_push_ = true;
-            if (!syncer_.isRunning()) {
-                syncer_.start();
+                // Always sync asyncronously with syncerActivity
+                trigger_push_ = true;
+                if (!syncer_.isRunning()) {
+                    syncer_.start();
+                }
             }
         }
     } catch(const Poco::Exception& exc) {
@@ -824,7 +846,11 @@ void Context::updateUI(const UIElements &what) {
         }
 
         if (what.display_unsynced_items && user_) {
-            unsynced_item_count = user_->related.NumberOfUnsyncedTimeEntries();
+            // 本地模式没有后端，也就没有"未同步"这个概念，
+            // 否则界面会一直显示还有 N 条没同步出去。
+            if (!urls::LocalMode()) {
+                unsynced_item_count = user_->related.NumberOfUnsyncedTimeEntries();
+            }
         }
 
         if (what.display_autotracker_rules && user_) {
@@ -1086,6 +1112,11 @@ void Context::FullSync() {
 }
 
 void Context::Sync() {
+    // 本地模式不联网：没有账号，也没有可同步的后端
+    if (urls::LocalMode()) {
+        return;
+    }
+
     logger.debug("Sync");
 
     if (!user_) {
@@ -1193,6 +1224,11 @@ error Context::LoadUpdateFromJSONString(const std::string &json) {
 void Context::switchWebSocketOn() {
     logger.debug("switchWebSocketOn");
 
+    // 本地模式没有后端可连，不建立 websocket
+    if (urls::LocalMode()) {
+        return;
+    }
+
     Poco::Util::TimerTask::Ptr ptask =
         new Poco::Util::TimerTaskAdapter<Context>(
             *this, &Context::onSwitchWebSocketOn);
@@ -1251,6 +1287,11 @@ void Context::onSwitchTimelineOff(Poco::Util::TimerTask&) {  // NOLINT
 void Context::switchTimelineOn() {
     logger.debug("switchTimelineOn");
 
+    // 本地模式不上传时间线；记录本身也没有服务器可去
+    if (urls::LocalMode()) {
+        return;
+    }
+
     Poco::Util::TimerTask::Ptr ptask =
         new Poco::Util::TimerTaskAdapter<Context>(
             *this, &Context::onSwitchTimelineOn);
@@ -1289,6 +1330,11 @@ void Context::onSwitchTimelineOn(Poco::Util::TimerTask&) {  // NOLINT
 
 void Context::fetchUpdates() {
     logger.debug("fetchUpdates");
+
+    // 本地模式不检查更新：那是 Toggl 后端的能力
+    if (urls::LocalMode()) {
+        return;
+    }
 
     next_fetch_updates_at_ =
         postpone(kRequestThrottleSeconds * kOneSecondInMicros);
@@ -1564,6 +1610,10 @@ error Context::downloadUpdate() {
 
 error Context::fetchMessage(const bool periodic) {
     try {
+        // 本地模式没有后端，也就没有站内信
+        if (urls::LocalMode()) {
+            return noError;
+        }
 
         // Check if in-app messaging is supported and show
         if (!UI()->CanDisplayMessage()) {
@@ -2925,6 +2975,13 @@ error Context::SetLoggedInUserFromJSON(
 
 error Context::Logout() {
     try {
+        // 本地模式没有可登出的账号：照原逻辑会清掉本地用户的 token 并回到
+        // 登录页，用户就再也进不来了。
+        if (urls::LocalMode()) {
+            logger.debug("Local mode: logout ignored");
+            return noError;
+        }
+
         if (!user_) {
             logger.warning("User is logged out, cannot logout again");
             return noError;
@@ -4579,6 +4636,11 @@ error Context::offerBetaChannel(bool *did_offer) {
 
         *did_offer = false;
 
+        // 本地模式不做任何后端相关的推广/灰度提示
+        if (urls::LocalMode()) {
+            return noError;
+        }
+
         if (update_check_disabled_) {
             // if update check is disabled, then
             // the channel selection won't be ever
@@ -5104,6 +5166,12 @@ void Context::reminderActivity() {
 }
 
 void Context::syncerActivityWrapper() {
+    // 本地模式不需要同步线程，直接不启动，避免任何后台请求
+    if (urls::LocalMode()) {
+        logger.debug("Local mode: syncer disabled");
+        return;
+    }
+
     enum {
         STARTUP,
         LEGACY,
@@ -5643,6 +5711,14 @@ error Context::pushBatchedChanges(
 error Context::pushChanges(
     bool *had_something_to_push) {
     try {
+        // 本地模式下永远没有可推送的后端，直接视为没有改动。
+        // 记录的镜像在 save() 里按变更增量触发，这里不需要再扫一遍。
+        if (urls::LocalMode()) {
+            poco_check_ptr(had_something_to_push);
+            *had_something_to_push = false;
+            return noError;
+        }
+
         Poco::Stopwatch stopwatch;
         stopwatch.start();
 
@@ -6062,6 +6138,159 @@ void Context::mirrorTimeEntry(
         logger.warning("Mirror push failed: ", ex.what());
     } catch (const std::string &ex) {
         logger.warning("Mirror push failed: ", ex);
+    }
+}
+
+error Context::localUser(User **result) {
+    poco_check_ptr(result);
+    *result = nullptr;
+
+    // 固定 ID：远高于任何真实账号可能用到的范围，重启后复用同一行，
+    // 这样本地记录不会因为换 ID 而丢掉。
+    const Poco::UInt64 kLocalUserID = 900000001ULL;
+    const Poco::UInt64 kLocalWorkspaceID = 900000001ULL;
+    const std::string kLocalToken = "local-mode";
+
+    User *user = new User();
+    error err = db()->LoadUserByID(kLocalUserID, user);
+    if (err != noError) {
+        delete user;
+        return err;
+    }
+
+    if (!user->ID()) {
+        delete user;
+
+        user = new User();
+        user->SetID(kLocalUserID);
+        user->SetEmail("local@localhost");
+        user->SetFullname("Local user");
+        user->SetAPIToken(kLocalToken);
+        user->SetDefaultWID(kLocalWorkspaceID);
+        user->SetSince(0);
+        user->SetTimeOfDayFormat("HH:mm");
+        user->SetDurationFormat("classic");
+        user->SetBeginningOfWeek(1);
+        user->SetRecordTimeline(false);
+
+        // 时间记录的 wid 是 NOT NULL 且外键指向 workspaces，
+        // 所以本地模式必须有一个工作区，否则保存会失败。
+        Workspace *workspace = new Workspace();
+        workspace->SetID(kLocalWorkspaceID);
+        workspace->SetUID(kLocalUserID);
+        workspace->SetName("Local");
+        user->related.Workspaces.push_back(workspace);
+
+        std::vector<ModelChange> changes;
+        err = db()->SaveUser(user, true, &changes);
+        if (err != noError) {
+            delete user;
+            return err;
+        }
+        logger.debug("Local mode: created offline user ", kLocalUserID);
+    }
+
+    // users 表不存 API token，但数据库层拒绝保存没有 token 的用户，
+    // 所以每次加载后都要补上；这个 token 不会用于任何网络请求。
+    user->SetAPIToken(kLocalToken);
+    user->SetDefaultWID(kLocalWorkspaceID);
+
+    *result = user;
+    return noError;
+}
+
+void Context::flushLocalTimeEntries(const std::vector<ModelChange> &changes) {
+    std::vector<std::string> payloads;
+    std::string api_token("");
+
+    if (!urls::HasMirrorURL()) {
+        // 没配镜像地址就没必要排队
+        return;
+    }
+
+    {
+        Poco::Mutex::ScopedLock lock(user_m_);
+        if (!user_) {
+            return;
+        }
+
+        api_token = user_->APIToken();
+
+        // 只处理本次保存里被改动过的时间记录，避免每次编辑都把全部记录重推一遍
+        for (std::vector<ModelChange>::const_iterator
+                it = changes.begin(); it != changes.end(); ++it) {
+            if (it->ModelType() != kModelTimeEntry) {
+                continue;
+            }
+
+            TimeEntry *te = user_->related.TimeEntryByGUID(it->GUID());
+            if (!te) {
+                // 已删除的记录可能已经从内存里移除，只把删除事件告诉远端
+                if (it->IsDeletion()) {
+                    Json::Value json;
+                    json["guid"] = it->GUID();
+                    json["deleted_at"] = Json::Int64(time(nullptr));
+                    Json::StyledWriter writer;
+                    payloads.push_back(writer.write(json));
+                }
+                continue;
+            }
+
+            Json::Value json = te->SaveToJSON();
+            if (te->DeletedAt() > 0) {
+                // 服务端按 guid 归档，删除也要让远端知道
+                json["deleted_at"] = Json::Int64(te->DeletedAt());
+            }
+
+            Json::StyledWriter writer;
+            payloads.push_back(writer.write(json));
+
+            // 本地模式没有后端回 ID，直接当作已同步，
+            // 否则状态栏会一直提示有未同步的记录。
+            te->ClearUnsynced();
+        }
+    }
+
+    // 网络请求不能在这里做：这个函数是在保存记录时（UI 线程）调用的
+    if (payloads.empty()) {
+        return;
+    }
+
+    {
+        Poco::Mutex::ScopedLock lock(mirror_m_);
+        mirror_queue_.insert(mirror_queue_.end(),
+                             payloads.begin(), payloads.end());
+        mirror_token_ = api_token;
+
+        // 已经排了一次消费任务，让它一起处理
+        if (mirror_flush_scheduled_) {
+            return;
+        }
+        mirror_flush_scheduled_ = true;
+    }
+
+    Poco::Util::TimerTask::Ptr ptask =
+        new Poco::Util::TimerTaskAdapter<Context>(
+            *this, &Context::onFlushMirrorQueue);
+
+    Poco::Mutex::ScopedLock lock(timer_m_);
+    timer_.schedule(ptask, Poco::Timestamp());
+}
+
+void Context::onFlushMirrorQueue(Poco::Util::TimerTask&) {  // NOLINT
+    std::vector<std::string> payloads;
+    std::string api_token("");
+
+    {
+        Poco::Mutex::ScopedLock lock(mirror_m_);
+        payloads.swap(mirror_queue_);
+        api_token = mirror_token_;
+        mirror_flush_scheduled_ = false;
+    }
+
+    for (std::vector<std::string>::const_iterator
+            it = payloads.begin(); it != payloads.end(); ++it) {
+        mirrorTimeEntry(*it, api_token);
     }
 }
 

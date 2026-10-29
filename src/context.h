@@ -625,6 +625,8 @@ class TOGGL_INTERNAL_EXPORT Context : public TimelineDatasource {
 
     // timer_ callbacks
     void onSwitchWebSocketOff(Poco::Util::TimerTask& task);  // NOLINT
+    // 本地模式：在后台线程把排队的记录镜像出去，避免阻塞 UI
+    void onFlushMirrorQueue(Poco::Util::TimerTask& task);  // NOLINT
     void onSwitchWebSocketOn(Poco::Util::TimerTask& task);  // NOLINT
     void onSwitchTimelineOff(Poco::Util::TimerTask& task);  // NOLINT
     void onSwitchTimelineOn(Poco::Util::TimerTask& task);  // NOLINT
@@ -733,6 +735,14 @@ class TOGGL_INTERNAL_EXPORT Context : public TimelineDatasource {
     void mirrorTimeEntry(
         const std::string &payload,
         const std::string &api_token);
+    // Local mode: builds (once) and loads an offline user + workspace from
+    // the local database, so the UI can run without any account. Idempotent.
+    error localUser(User **result);
+    // Local mode: pushes only the time entries that changed in this save to
+    // the mirror endpoint. Change-driven on purpose: local entries never get
+    // a server ID, so scanning for NeedsPush() would re-push everything on
+    // every edit.
+    void flushLocalTimeEntries(const std::vector<ModelChange> &changes);
     error updateProjectClients(
         const std::vector<Client *> &clients,
         const std::vector<Project *> &projects);
@@ -816,6 +826,12 @@ class TOGGL_INTERNAL_EXPORT Context : public TimelineDatasource {
     // Schedule tasks using a timer:
     Poco::Mutex timer_m_;
     Poco::Util::Timer timer_;
+
+    // 本地模式下的镜像推送队列（后台线程消费，避免卡 UI）
+    Poco::Mutex mirror_m_;
+    std::vector<std::string> mirror_queue_;
+    std::string mirror_token_;
+    bool mirror_flush_scheduled_ = false;
 
     class GUI ui_;
 

@@ -445,6 +445,14 @@ char_t *toggl_mirror_url() {
     return copy_string(toggl::urls::MirrorURL());
 }
 
+void toggl_set_local_mode(const bool_t value) {
+    toggl::urls::SetLocalMode(value);
+}
+
+bool_t toggl_local_mode() {
+    return toggl::urls::LocalMode();
+}
+
 void toggl_show_app(
     void *context) {
     app(context)->UI()->DisplayApp();

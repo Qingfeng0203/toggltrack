@@ -188,3 +188,5 @@ third_party/poco/Foundation/src/pocomsg.rc
 
 # Resharper user settings
 *.DotSettings.user
+__pycache__/
+*.pyc

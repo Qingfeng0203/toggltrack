@@ -26,6 +26,9 @@ static std::string custom_server_url_ = "";
 // Optional mirror for time entries pushed to the backend
 static std::string mirror_url_ = "";
 
+// Local mode: run without an account and never touch a backend
+static bool local_mode_ = false;
+
 void SetUseStagingAsBackend(const bool value) {
     use_staging_as_backend = value;
 }
@@ -153,6 +156,14 @@ bool RequestsAllowed() {
 
 void SetRequestsAllowed(const bool value) {
     requests_allowed_ = value;
+}
+
+bool LocalMode() {
+    return local_mode_;
+}
+
+void SetLocalMode(const bool value) {
+    local_mode_ = value;
 }
 
 

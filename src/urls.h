@@ -41,6 +41,15 @@ void SetMirrorURL(const std::string &value);
 
 bool HasMirrorURL();
 
+// Local (no-login) mode. When enabled the app is fully usable without an
+// account: it boots straight into the UI on top of the local database and
+// never talks to a backend. Sync, timeline upload, websocket, update checks
+// and in-app messages are all skipped. The mirror endpoint is still used,
+// but it is fed from local time entry changes instead of a backend push.
+bool LocalMode();
+
+void SetLocalMode(const bool value);
+
 bool RequestsAllowed();
 
 void SetRequestsAllowed(const bool value);

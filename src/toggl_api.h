@@ -493,6 +493,21 @@ typedef enum {
 
     TOGGL_EXPORT char_t *toggl_mirror_url();
 
+    // Local (no-login) mode. When enabled the app boots straight into the
+    // main UI using the local database, without asking for an account, and
+    // no backend request is made at all: sync, timeline upload, websocket,
+    // update checks and in-app messages are skipped. Time entries created
+    // while local mode is on stay on this computer; if a mirror URL is
+    // configured they are also POSTed to it on every change.
+    // Must be called before toggl_ui_start.
+
+    TOGGL_EXPORT void toggl_set_local_mode(
+        const bool_t value);
+
+    // Returns whether local mode is currently enabled.
+
+    TOGGL_EXPORT bool_t toggl_local_mode();
+
     // Ignoring SSL verification can be turned on in the UI
     TOGGL_EXPORT bool_t toggl_set_settings_ignore_cert(
         void *context,

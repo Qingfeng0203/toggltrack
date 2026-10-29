@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS time_entries (
     task_id         TEXT,
     created_with    TEXT,
     ui_modified_at  INTEGER,
+    deleted_at      INTEGER DEFAULT 0,
     raw             TEXT NOT NULL,
     received_at     INTEGER NOT NULL,
     updated_at      INTEGER NOT NULL
@@ -61,6 +62,18 @@ CREATE TABLE IF NOT EXISTS time_entries (
 CREATE INDEX IF NOT EXISTS idx_time_entries_start ON time_entries(start_at);
 CREATE INDEX IF NOT EXISTS idx_time_entries_received ON time_entries(received_at);
 """
+
+
+def ensure_schema(conn):
+    """建表 + 增量迁移，老库直接升级不用重建。"""
+    conn.executescript(SCHEMA)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(time_entries)")}
+    if "deleted_at" not in cols:
+        conn.execute(
+            "ALTER TABLE time_entries ADD COLUMN deleted_at INTEGER DEFAULT 0"
+        )
+        conn.commit()
+        log("数据库迁移：time_entries 增加 deleted_at 列")
 
 
 def log(msg):
@@ -147,6 +160,7 @@ def normalize_entry(item):
         "task_id": item.get("task_id"),
         "created_with": item.get("created_with"),
         "ui_modified_at": item.get("ui_modified_at"),
+        "deleted_at": item.get("deleted_at") or 0,
         "raw": json.dumps(item, ensure_ascii=False),
     }
 
@@ -157,40 +171,54 @@ def store(db_path, entries):
     with DB_LOCK:
         conn = sqlite3.connect(db_path, timeout=10)
         try:
-            conn.executescript(SCHEMA)
+            ensure_schema(conn)
             cur = conn.cursor()
             created = updated = 0
             for e in entries:
                 exists = cur.execute(
                     "SELECT 1 FROM time_entries WHERE guid = ?", (e["guid"],)
                 ).fetchone()
-                if exists:
+                if exists and e["deleted_at"]:
+                    # 删除事件只打标记，不能把已经存下来的内容覆盖成空
+                    cur.execute(
+                        """UPDATE time_entries SET deleted_at=?, raw=?, updated_at=?
+                           WHERE guid=?""",
+                        (e["deleted_at"], e["raw"], now, e["guid"]),
+                    )
+                    updated += 1
+                elif exists:
                     cur.execute(
                         """UPDATE time_entries SET
                                id=?, workspace_id=?, description=?, start_at=?, stop_at=?,
                                duration=?, billable=?, tags=?, project_id=?, task_id=?,
-                               created_with=?, ui_modified_at=?, raw=?, updated_at=?
+                               created_with=?, ui_modified_at=?, deleted_at=?, raw=?,
+                               updated_at=?
                            WHERE guid=?""",
                         (
                             e["id"], e["workspace_id"], e["description"], e["start_at"],
                             e["stop_at"], e["duration"], e["billable"], e["tags"],
                             e["project_id"], e["task_id"], e["created_with"],
-                            e["ui_modified_at"], e["raw"], now, e["guid"],
+                            e["ui_modified_at"], e["deleted_at"], e["raw"], now,
+                            e["guid"],
                         ),
                     )
                     updated += 1
+                elif e["deleted_at"]:
+                    # 远端本来就没有这条，删除事件无需落库
+                    continue
                 else:
                     cur.execute(
                         """INSERT INTO time_entries
                                (guid, id, workspace_id, description, start_at, stop_at,
                                 duration, billable, tags, project_id, task_id,
-                                created_with, ui_modified_at, raw, received_at, updated_at)
-                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                created_with, ui_modified_at, deleted_at, raw,
+                                received_at, updated_at)
+                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                         (
                             e["guid"], e["id"], e["workspace_id"], e["description"],
                             e["start_at"], e["stop_at"], e["duration"], e["billable"],
                             e["tags"], e["project_id"], e["task_id"], e["created_with"],
-                            e["ui_modified_at"], e["raw"], now, now,
+                            e["ui_modified_at"], e["deleted_at"], e["raw"], now, now,
                         ),
                     )
                     created += 1
@@ -309,15 +337,19 @@ class Handler(BaseHTTPRequestHandler):
     def stats(self):
         conn = sqlite3.connect(self.db_path, timeout=10)
         try:
-            conn.executescript(SCHEMA)
+            ensure_schema(conn)
             cur = conn.cursor()
-            total = cur.execute("SELECT COUNT(*) FROM time_entries").fetchone()[0]
+            total = cur.execute(
+                "SELECT COUNT(*) FROM time_entries WHERE deleted_at = 0"
+            ).fetchone()[0]
             seconds = cur.execute(
                 "SELECT COALESCE(SUM(CASE WHEN duration > 0 THEN duration ELSE 0 END), 0) "
-                "FROM time_entries"
+                "FROM time_entries WHERE deleted_at = 0"
             ).fetchone()[0]
             latest = cur.execute("SELECT MAX(received_at) FROM time_entries").fetchone()[0]
-            first = cur.execute("SELECT MIN(start_at) FROM time_entries").fetchone()[0]
+            first = cur.execute(
+                "SELECT MIN(start_at) FROM time_entries WHERE deleted_at = 0"
+            ).fetchone()[0]
             return {
                 "ok": True,
                 "entries": total,
@@ -335,17 +367,17 @@ class Handler(BaseHTTPRequestHandler):
         since = query.get("since", [None])[0]
         limit = int(query.get("limit", ["1000"])[0])
 
-        sql = "SELECT raw FROM time_entries"
+        sql = "SELECT raw FROM time_entries WHERE deleted_at = 0"
         args = []
         if since:
-            sql += " WHERE received_at >= ?"
+            sql += " AND received_at >= ?"
             args.append(int(since))
         sql += " ORDER BY received_at DESC LIMIT ?"
         args.append(limit)
 
         conn = sqlite3.connect(self.db_path, timeout=10)
         try:
-            conn.executescript(SCHEMA)
+            ensure_schema(conn)
             rows = conn.execute(sql, args).fetchall()
             return [json.loads(r[0]) for r in rows]
         finally:
@@ -361,7 +393,7 @@ def run(host, port, db_path, tokens, verbose):
 
     # 先把库建好，启动即失败比运行时才失败好排查
     conn = sqlite3.connect(db_path)
-    conn.executescript(SCHEMA)
+    ensure_schema(conn)
     conn.close()
 
     server = ThreadingHTTPServer((host, port), Handler)

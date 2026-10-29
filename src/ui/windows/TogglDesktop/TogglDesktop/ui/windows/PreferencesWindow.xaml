@@ -51,6 +51,18 @@
                                    Style="{DynamicResource Toggl.BodyGrayText}"
                                    Text="{DynamicResource s_language_hint}"
                                    TextWrapping="Wrap" />
+                        <TextBlock Margin="0 32 0 0" Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_local_mode}" />
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <mah:ToggleSwitch x:Name="localModeCheckBox" x:FieldModifier="private"
+                                              VerticalAlignment="Center" />
+                            <TextBlock Margin="10 0 0 0" VerticalAlignment="Center"
+                                       Style="{DynamicResource Toggl.BodyText}"
+                                       Text="{DynamicResource s_local_mode_enable}" />
+                        </StackPanel>
+                        <TextBlock Margin="0 6 0 0" Width="360" HorizontalAlignment="Left"
+                                   Style="{DynamicResource Toggl.BodyGrayText}"
+                                   Text="{DynamicResource s_local_mode_hint}"
+                                   TextWrapping="Wrap" />
                         <TextBlock Margin="0 32 0 0" Style="{DynamicResource Toggl.TitleText}" Text="{DynamicResource s_light_dark_mode}" />
                         <ComboBox x:Name="themeComboBox" Margin="0 6 0 0" Width="360"
                                   HorizontalAlignment="Left">

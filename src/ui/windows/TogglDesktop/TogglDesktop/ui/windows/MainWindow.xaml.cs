@@ -373,7 +373,12 @@ namespace TogglDesktop
 
             if (open)
             {
-                this.setActiveView(this.loginView);
+                // 本地模式下即使库端要求登录，也不切到登录界面，
+                // 否则用户会被卡在一个用不了的页面上。
+                if (!Toggl.IsLocalMode())
+                {
+                    this.setActiveView(this.loginView);
+                }
             }
 
             if (open || userID == 0)
@@ -382,6 +387,14 @@ namespace TogglDesktop
                 this.taskbarIcon.TrayToolTip = null;
                 this.taskbarIcon.ToolTipText = Localization.GetString("s_toggl_logged_out");
                 this.SetMiniTimerVisible(false);
+            }
+            else if (Toggl.IsLocalMode())
+            {
+                // 本地模式没有账号可登出，把这个入口收起来，
+                // 否则点它只会退回登录界面。
+                this.logoutMenuItem.Visibility = Visibility.Collapsed;
+                this.taskbarIcon.TrayToolTip = trayToolTip;
+                this.taskbarIcon.ToolTipText = Localization.GetString("s_local_mode");
             }
             else
             {

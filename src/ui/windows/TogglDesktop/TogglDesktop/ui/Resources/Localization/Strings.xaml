@@ -210,6 +210,9 @@
     <system:String x:Key="s_mirror_disable">Stop pushing</system:String>
     <system:String x:Key="s_mirror_hint">Each time entry is also sent to your own server once it has been synced. The normal Toggl Track sync is not affected, so a server that is down or misconfigured never blocks your work.</system:String>
     <system:String x:Key="s_mirror_note">Only entries created or edited on this computer are pushed, and only after they were synced to Toggl Track. Leave it empty to disable.</system:String>
+    <system:String x:Key="s_local_mode">Local mode</system:String>
+    <system:String x:Key="s_local_mode_enable">Use without an account</system:String>
+    <system:String x:Key="s_local_mode_hint">Runs on the local database only: no login, no sync, no update checks, no in-app messages. If an account is already signed in, its syncing stops too. Takes effect after restarting the app.</system:String>
     <system:String x:Key="s_set_up_shortcuts">Set up shortcuts</system:String>
     <system:String x:Key="s_show_hide_toggl_track">Show/Hide Toggl Track</system:String>
     <system:String x:Key="s_sign_up">Sign up</system:String>

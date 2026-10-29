@@ -210,6 +210,9 @@
     <system:String x:Key="s_mirror_disable">停止推送</system:String>
     <system:String x:Key="s_mirror_hint">每条时间记录在同步成功后，会额外发送一份到你自己指定的服务器。官方的 Toggl Track 同步不受影响，服务器挂了或配错也不会影响正常计时。</system:String>
     <system:String x:Key="s_mirror_note">只推送在本机新建或修改、且已成功同步到 Toggl Track 的记录。留空表示不启用。</system:String>
+    <system:String x:Key="s_local_mode">本地模式</system:String>
+    <system:String x:Key="s_local_mode_enable">免登录使用</system:String>
+    <system:String x:Key="s_local_mode_hint">只在本机数据库上工作：不需要登录，不联网同步，不检查更新，也不接收站内信。若之前已登录过账号，它的同步也会一并停止。切换后需要重启应用才生效。</system:String>
     <system:String x:Key="s_set_up_shortcuts">设置快捷键</system:String>
     <system:String x:Key="s_show_hide_toggl_track">显示/隐藏 Toggl Track</system:String>
     <system:String x:Key="s_sign_up">注册</system:String>

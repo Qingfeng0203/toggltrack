@@ -46,6 +46,7 @@ namespace TogglDesktop
 
             this.selectCurrentLanguage();
             this.mirrorUrlTextBox.Text = Toggl.GetMirrorUrl();
+            this.localModeCheckBox.IsChecked = LocalModeStore.IsEnabled;
 
             this.Closing += OnClosing;
         }
@@ -304,6 +305,10 @@ namespace TogglDesktop
             // 下次启动时 StartUI 会从这个文件恢复。
             MirrorUrlStore.Save(settings.MirrorUrl);
             Toggl.SetMirrorUrl(settings.MirrorUrl);
+
+            // 本地模式开关交给库端在下次启动时读取，所以这里只落盘。
+            // 当前会话的同步线程状态不随之改变，避免中途切换导致数据半同步。
+            Toggl.SetLocalMode(isChecked(this.localModeCheckBox));
 
             return Toggl.SetSettings(settings.TogglSettings);
         }

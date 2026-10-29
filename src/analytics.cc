@@ -154,6 +154,11 @@ const std::string GoogleAnalyticsEvent::relativeURL() {
 }
 
 void GoogleAnalyticsEvent::runTask() {
+    // 本地模式不向任何后端（含分析服务）上报
+    if (urls::LocalMode()) {
+        return;
+    }
+
     HTTPRequest req;
     req.host = "https://ssl.google-analytics.com";
     req.relative_url = relativeURL();
@@ -178,6 +183,11 @@ const std::string GoogleAnalyticsSettingsEvent::relativeURL() {
 }
 
 void GoogleAnalyticsSettingsEvent::runTask() {
+    // 本地模式不向任何后端（含分析服务）上报
+    if (urls::LocalMode()) {
+        return;
+    }
+
     setActionBool("record_timeline-", record_timeline);
     makeReq();
 

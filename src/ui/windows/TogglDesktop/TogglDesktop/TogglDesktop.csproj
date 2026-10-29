@@ -288,6 +288,7 @@
     <Compile Include="ui\Localization\Localization.cs" />
     <Compile Include="ui\Localization\Localization.Fallback.cs" />
     <Compile Include="ui\Configuration\MirrorUrlStore.cs" />
+    <Compile Include="ui\Configuration\LocalModeStore.cs" />
     <Compile Include="ui\Theming\Theme.cs" />
     <Compile Include="ui\Theming\ThemeResourceDictionary.cs" />
     <Compile Include="ui\Theming\ThemeType.cs" />
