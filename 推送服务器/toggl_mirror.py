@@ -27,6 +27,7 @@ Toggl Desktop 时间记录镜像接收服务（单文件、零第三方依赖）
 
 import argparse
 import base64
+import datetime
 import gzip
 import json
 import os
@@ -55,6 +56,8 @@ CREATE TABLE IF NOT EXISTS time_entries (
     created_with    TEXT,
     ui_modified_at  INTEGER,
     deleted_at      INTEGER DEFAULT 0,
+    local_start     TEXT,
+    local_stop      TEXT,
     raw             TEXT NOT NULL,
     received_at     INTEGER NOT NULL,
     updated_at      INTEGER NOT NULL
@@ -62,6 +65,46 @@ CREATE TABLE IF NOT EXISTS time_entries (
 CREATE INDEX IF NOT EXISTS idx_time_entries_start ON time_entries(start_at);
 CREATE INDEX IF NOT EXISTS idx_time_entries_received ON time_entries(received_at);
 """
+
+
+TZ_OFFSET_HOURS = float(os.environ.get("MIRROR_TZ_HOURS", "8"))
+TZ_OFFSET_SECONDS = int(TZ_OFFSET_HOURS * 3600)
+
+
+def tz_suffix(hours):
+    """8.0 -> '+0800'，5.5 -> '+0530'。"""
+    sign = "+" if hours >= 0 else "-"
+    whole = abs(int(hours))
+    minutes = int(round((abs(hours) - whole) * 60))
+    return "%s%02d%02d" % (sign, whole, minutes)
+
+
+def parse_iso(text):
+    """'2026-10-30T01:05:38Z' / '2026-10-30T09:05:38+0800' -> epoch 秒。"""
+    if not text:
+        return None
+    s = text.strip()
+    try:
+        dt = datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            dt = datetime.datetime.strptime(s[:19], "%Y-%m-%dT%H:%M:%S")
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        except ValueError:
+            return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return int(dt.timestamp())
+
+
+def to_local_text(text):
+    """UTC 时间字符串 -> 本地时区字符串（只用于显示，不改库）。"""
+    epoch = parse_iso(text)
+    if epoch is None:
+        return None
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%S",
+                        time.gmtime(epoch + TZ_OFFSET_SECONDS))
+    return stamp + tz_suffix(TZ_OFFSET_HOURS)
 
 
 def ensure_schema(conn):
@@ -74,6 +117,27 @@ def ensure_schema(conn):
         )
         conn.commit()
         log("数据库迁移：time_entries 增加 deleted_at 列")
+
+    # 本地时间列：老库补列后再回填，这样历史记录也能按东八区看
+    added = False
+    for col in ("local_start", "local_stop"):
+        if col not in cols:
+            conn.execute("ALTER TABLE time_entries ADD COLUMN %s TEXT" % col)
+            added = True
+    if added:
+        conn.commit()
+        log("数据库迁移：time_entries 增加 local_start/local_stop 列")
+
+    rows = conn.execute(
+        "SELECT guid, start_at, stop_at FROM time_entries "
+        "WHERE local_start IS NULL AND start_at IS NOT NULL").fetchall()
+    for guid, start_at, stop_at in rows:
+        conn.execute("UPDATE time_entries SET local_start=?, local_stop=? "
+                     "WHERE guid=?",
+                     (to_local_text(start_at), to_local_text(stop_at), guid))
+    if rows:
+        conn.commit()
+        log("数据库迁移：回填 %d 条记录的本地区时间" % len(rows))
 
 
 def log(msg):
@@ -161,6 +225,10 @@ def normalize_entry(item):
         "created_with": item.get("created_with"),
         "ui_modified_at": item.get("ui_modified_at"),
         "deleted_at": item.get("deleted_at") or 0,
+        # 客户端按 Toggl API v9 协议发 UTC 时间（带 Z）。
+        # 这里额外存一份本地时区文本，方便直接看，原始值不做改动。
+        "local_start": to_local_text(item.get("start")),
+        "local_stop": to_local_text(item.get("stop")),
         "raw": json.dumps(item, ensure_ascii=False),
     }
 
@@ -191,14 +259,16 @@ def store(db_path, entries):
                         """UPDATE time_entries SET
                                id=?, workspace_id=?, description=?, start_at=?, stop_at=?,
                                duration=?, billable=?, tags=?, project_id=?, task_id=?,
-                               created_with=?, ui_modified_at=?, deleted_at=?, raw=?,
+                               created_with=?, ui_modified_at=?, deleted_at=?,
+                               local_start=?, local_stop=?, raw=?,
                                updated_at=?
                            WHERE guid=?""",
                         (
                             e["id"], e["workspace_id"], e["description"], e["start_at"],
                             e["stop_at"], e["duration"], e["billable"], e["tags"],
                             e["project_id"], e["task_id"], e["created_with"],
-                            e["ui_modified_at"], e["deleted_at"], e["raw"], now,
+                            e["ui_modified_at"], e["deleted_at"],
+                            e["local_start"], e["local_stop"], e["raw"], now,
                             e["guid"],
                         ),
                     )
@@ -211,14 +281,16 @@ def store(db_path, entries):
                         """INSERT INTO time_entries
                                (guid, id, workspace_id, description, start_at, stop_at,
                                 duration, billable, tags, project_id, task_id,
-                                created_with, ui_modified_at, deleted_at, raw,
+                                created_with, ui_modified_at, deleted_at,
+                                local_start, local_stop, raw,
                                 received_at, updated_at)
-                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                         (
                             e["guid"], e["id"], e["workspace_id"], e["description"],
                             e["start_at"], e["stop_at"], e["duration"], e["billable"],
                             e["tags"], e["project_id"], e["task_id"], e["created_with"],
-                            e["ui_modified_at"], e["deleted_at"], e["raw"], now, now,
+                            e["ui_modified_at"], e["deleted_at"],
+                            e["local_start"], e["local_stop"], e["raw"], now, now,
                         ),
                     )
                     created += 1
@@ -378,8 +450,17 @@ class Handler(BaseHTTPRequestHandler):
         conn = sqlite3.connect(self.db_path, timeout=10)
         try:
             ensure_schema(conn)
-            rows = conn.execute(sql, args).fetchall()
-            return [json.loads(r[0]) for r in rows]
+            rows = conn.execute(
+                sql.replace("raw FROM", "raw, local_start, local_stop FROM"),
+                args).fetchall()
+            result = []
+            for raw, local_start, local_stop in rows:
+                item = json.loads(raw)
+                # 附上本地时区文本，原始 UTC 字段保持不动
+                item["local_start"] = local_start
+                item["local_stop"] = local_stop
+                result.append(item)
+            return result
         finally:
             conn.close()
 
