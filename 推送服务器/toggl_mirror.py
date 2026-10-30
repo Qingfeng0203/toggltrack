@@ -315,13 +315,47 @@ class Handler(BaseHTTPRequestHandler):
 
     # ---- 基础响应 ----
 
-    def send_json(self, code, payload):
+    def send_json(self, code, payload, extra_headers=None):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        for key, value in (extra_headers or {}).items():
+            self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
+
+    def basic_username(self):
+        """Basic 鉴权里的用户名，也就是客户端的 api_token。仅用于诊断日志。"""
+        header = self.headers.get("Authorization") or ""
+        if not header.lower().startswith("basic "):
+            return None
+        try:
+            decoded = base64.b64decode(
+                header.split(None, 1)[1]).decode("utf-8", "replace")
+        except Exception:
+            return None
+        return decoded.split(":", 1)[0]
+
+    def reject_unauthorized(self, drain_body=False):
+        """拒绝未授权请求。
+
+        要点：必须先把请求体读完再回 401。客户端是 chunked + keep-alive，
+        不消费 body 就返回的话，剩余数据会被当成下一个请求解析，
+        日志里会冒出一堆 Bad request syntax。
+        """
+        log("拒绝未授权请求：来源 %s，客户端 api_token=%s，服务端允许=%s" % (
+            self.address_string(),
+            self.basic_username() or "(无)",
+            ",".join(self.tokens) or "(未配置，不校验)"))
+        if drain_body:
+            try:
+                read_body(self)
+            except Exception:
+                pass
+        self.close_connection = True
+        self.send_json(401, {"ok": False, "error": "unauthorized"},
+                       {"Connection": "close"})
 
     def authorized(self):
         if not self.tokens:
@@ -346,7 +380,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if not self.authorized():
-            self.send_json(401, {"ok": False, "error": "unauthorized"})
+            self.reject_unauthorized()
             return
 
         if path == "/v1/stats":
@@ -366,7 +400,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if not self.authorized():
-            self.send_json(401, {"ok": False, "error": "unauthorized"})
+            self.reject_unauthorized(drain_body=True)
             return
 
         try:
@@ -467,6 +501,13 @@ class Handler(BaseHTTPRequestHandler):
 
 def run(host, port, db_path, tokens, verbose):
     os.makedirs(os.path.dirname(os.path.abspath(db_path)) or ".", exist_ok=True)
+
+    # 支持一个参数里空格分隔多个 token（systemd 的 $MIRROR_TOKENS 展开后是整体），
+    # 并丢掉空值：配置留空应当表示"不校验"，而不是用一个空字符串拒绝所有请求。
+    expanded = []
+    for item in tokens:
+        expanded.extend(part for part in item.split() if part)
+    tokens = expanded
 
     Handler.db_path = db_path
     Handler.tokens = tokens
