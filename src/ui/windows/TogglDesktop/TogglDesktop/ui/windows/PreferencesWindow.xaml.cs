@@ -308,7 +308,8 @@ namespace TogglDesktop
 
             // 本地模式开关交给库端在下次启动时读取，所以这里只落盘。
             // 当前会话的同步线程状态不随之改变，避免中途切换导致数据半同步。
-            Toggl.SetLocalMode(isChecked(this.localModeCheckBox));
+            // 注意：这里不能访问 UI 控件，本方法运行在后台线程上。
+            Toggl.SetLocalMode(settings.LocalMode);
 
             return Toggl.SetSettings(settings.TogglSettings);
         }
@@ -379,6 +380,10 @@ namespace TogglDesktop
             {
                 TogglSettings = settings,
                 MirrorUrl = this.mirrorUrlTextBox.Text,
+                // 在 UI 线程上取值：save() 跑在 Task.Run 的后台线程里，
+                // 在那里访问 ToggleSwitch 这类 DependencyObject 会抛
+                // InvalidOperationException（Dispatcher.VerifyAccess）。
+                LocalMode = isChecked(this.localModeCheckBox),
                 DefaultProject = this.selectedDefaultProject,
                 KeepEndTimeFixed = isChecked(this.keepEndTimeFixedCheckbox),
                 LaunchOnStartup = isChecked(this.launchOnStartupCheckBox),
@@ -391,6 +396,7 @@ namespace TogglDesktop
         {
             public Toggl.TogglSettingsView TogglSettings { get; set; }
             public string MirrorUrl { get; set; }
+            public bool LocalMode { get; set; }
             public Toggl.TogglAutocompleteView DefaultProject { get; set; }
             public bool KeepEndTimeFixed { get; set; }
             public bool LaunchOnStartup { get; set; }
