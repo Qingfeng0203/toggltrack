@@ -40,7 +40,7 @@
             <TextBlock Style="{StaticResource Toggl.BodyText}" Text="{DynamicResource s_send_us_your_feedback_or_questions}"/>
             <ComboBox x:Name="topicComboBox" x:FieldModifier="private"
                       Margin="0,18,0,0"
-                      mah:TextBoxHelper.Watermark="Please specify the topic"
+                      mah:TextBoxHelper.Watermark="{DynamicResource s_please_specify_topic}"
                       ItemsSource="{Binding PossibleTopics}"
                       SelectedItem="{Binding Topic, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
                       LostFocus="OnTopicComboBoxLostFocus"

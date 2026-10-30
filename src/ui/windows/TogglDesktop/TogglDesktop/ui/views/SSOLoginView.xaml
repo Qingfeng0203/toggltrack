@@ -19,7 +19,7 @@
                         <TextBox x:Name="emailTextBox"
                                  Margin="0 20 0 0"
                                  Width="200"
-                                 mah:TextBoxHelper.Watermark="Work email address"
+                                 mah:TextBoxHelper.Watermark="{DynamicResource s_work_email_address}"
                                  Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                  Loaded="HandleEmailTextBoxLoaded">
                         </TextBox>

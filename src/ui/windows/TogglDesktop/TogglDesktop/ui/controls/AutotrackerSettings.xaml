@@ -38,7 +38,7 @@
             <TextBox Grid.Column="0" Grid.Row="0"
                      x:Name="termTextBox" x:FieldModifier="private"
                      Margin="0 0 8 0"
-                     mah:TextBoxHelper.Watermark="Keyword" />
+                     mah:TextBoxHelper.Watermark="{DynamicResource s_keyword}" />
 
             <!-- project selection -->
             <Border Grid.Column="1" Grid.Row="0"
@@ -49,7 +49,7 @@
                 <Grid>
                     <toggl:ProjectTextBox x:Name="projectTextBox" x:FieldModifier="private"
                                           BorderThickness="0"
-                                          mah:TextBoxHelper.Watermark="Select project"
+                                          mah:TextBoxHelper.Watermark="{DynamicResource s_select_project}"
                                           Height="Auto"
                                           Padding="20 0 30 0"
                                           Margin="0"

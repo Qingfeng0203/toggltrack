@@ -85,12 +85,12 @@
                             <mah:HotKeyBox Grid.Column="1" Grid.Row="0"
                                            Margin="16 0 0 0"
                                            AreModifierKeysRequired="True"
-                                           mah:TextBoxHelper.Watermark="Record shortcut"
+                                           mah:TextBoxHelper.Watermark="{DynamicResource s_record_shortcut}"
                                            HotKey="{Binding ShowHideToggl, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"/>
                             <mah:HotKeyBox Grid.Column="1" Grid.Row="1"
                                            Margin="16 8 0 0"
                                            AreModifierKeysRequired="True"
-                                           mah:TextBoxHelper.Watermark="Record shortcut"
+                                           mah:TextBoxHelper.Watermark="{DynamicResource s_record_shortcut}"
                                            HotKey="{Binding ContinueStopTimer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"/>
                         </Grid>
 
@@ -110,7 +110,7 @@
                                     Style="{StaticResource {x:Type TextBox}}"
                                     BorderThickness="0"
                                     Padding="24 0 34 0"
-                                    mah:TextBoxHelper.Watermark="No project selected"
+                                    mah:TextBoxHelper.Watermark="{DynamicResource s_no_project_selected}"
                                     LostKeyboardFocus="defaultProjectTextBox_OnLostKeyboardFocus"/>
                                 <ToggleButton
                                     x:Name="defaultProjectDropDownButton" x:FieldModifier="private"
@@ -239,7 +239,7 @@
                             <TextBlock Style="{DynamicResource Toggl.BodyText}" Margin="0 24 0 0"
                                        Text="{DynamicResource s_record_activity}" />
                             <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
-                                       Text="You'll have a timeline of all activity on your computer with a breakdown of time spent on applications and websites. Only you can access this data." />
+                                       Text="{DynamicResource s_timeline_data_hint}" />
                             <mah:ToggleSwitch Margin="0 14 0 0"
                                               Name="recordTimelineCheckBox" x:FieldModifier="private" />
                         </StackPanel>
@@ -275,7 +275,7 @@
                         <TextBlock Style="{StaticResource Toggl.TitleText}" Margin="0 32 0 0"
                                    Text="{DynamicResource s_clear_cache}" />
                         <TextBlock Style="{StaticResource Toggl.CaptionText}" Margin="0 4 0 0"
-                                   Text="This will clear all Toggl local data and log you out. To avoid losing any time entries, please make sure they are successfully synced."/>
+                                   Text="{DynamicResource s_clear_local_data_warning}"/>
                         <Button Style="{StaticResource Toggl.PrimaryButton}" Margin="0 8 0 0"
                                 Width="136"
                                 HorizontalAlignment="Left"
@@ -360,7 +360,7 @@
                                    Text="{DynamicResource s_autotracker}" />
                         <TextBlock Margin="0 12 0 0"
                                    Style="{StaticResource Toggl.CaptionText}"
-                                   Text="Autotracker helps to make time tracking faster by triggering customized suggestions. When a selected app is open in the foreground, you'll get one of the prefilled suggestions." />
+                                   Text="{DynamicResource s_autotracker_hint}" />
                         <mah:ToggleSwitch Name="enableAutotrackerCheckbox" x:FieldModifier="private"
                                           Margin="0 14 0 0"/>
                     </StackPanel>
@@ -386,7 +386,7 @@
                                Text="{DynamicResource s_mirror_address}" />
                     <TextBox x:Name="mirrorUrlTextBox" x:FieldModifier="private"
                              Margin="0 6 0 0" Width="380" HorizontalAlignment="Left"
-                             mah:TextBoxHelper.Watermark="http://10.104.2.133:8080" />
+                             mah:TextBoxHelper.Watermark="{DynamicResource s_mirror_watermark}" />
                     <TextBlock Style="{DynamicResource Toggl.CaptionText}" Margin="0 4 0 0"
                                Width="420" HorizontalAlignment="Left" TextWrapping="Wrap"
                                Text="{DynamicResource s_mirror_address_hint}" />
